@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import QRScanner from './components/QRScanner';
 import AttendanceLog from './components/AttendanceLog';
 import { AttendanceMode, AttendanceRecord, AttendanceStatus } from './types';
-import { StudentIcon, TeacherIcon, CheckCircleIcon } from './components/icons';
+import { StudentIcon, TeacherIcon, CheckCircleIcon, PmShriLogo } from './components/icons';
 
 declare global {
   interface Window {
@@ -14,12 +14,9 @@ declare global {
   }
 }
 
-// Default to is_admin: true so the live demo on the static index.html page works.
-// In WordPress, the plugin will correctly set this to true or false based on the user's role.
 const { apiUrl, nonce, is_admin } = window.smgtQrAttendanceData || { apiUrl: '', nonce: '', is_admin: true };
 
 const App: React.FC = () => {
-  // For admins, the mode can be toggled. For non-admins (teachers), it's always Student.
   const [mode, setMode] = useState<AttendanceMode>(AttendanceMode.Student);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -35,6 +32,7 @@ const App: React.FC = () => {
     
     let attendanceMode = is_admin ? mode : AttendanceMode.Student;
     
+    // If admin, autodetect mode from QR if possible
     if (is_admin) {
         try {
             const qrData = JSON.parse(decodedText);
@@ -129,69 +127,80 @@ const App: React.FC = () => {
   };
     
   return (
-    <div className="w-full max-w-4xl mx-auto">
-        <main className="flex flex-col lg:flex-row gap-8 items-start">
-            <div className="w-full lg:w-1/2 flex flex-col items-center bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                {is_admin ? (
-                  // Admin View: Show the toggle to switch between Student and Teacher scanning
-                  <div className="w-full max-w-xs mb-6">
-                      <div className="flex items-center space-x-2 bg-gray-100 rounded-xl p-1">
-                          <ModeButton targetMode={AttendanceMode.Student}>
-                              <StudentIcon className="w-5 h-5 mr-2" /> Student
-                          </ModeButton>
-                          <ModeButton targetMode={AttendanceMode.Teacher}>
-                              <TeacherIcon className="w-5 h-5 mr-2" /> Teacher
-                          </ModeButton>
-                      </div>
-                  </div>
-                ) : (
-                  // Teacher (Non-Admin) View: Lock to Student scanning only
-                  <div className="w-full max-w-xs mb-6 text-center">
-                    <div className="p-3 bg-blue-50 text-blue-800 rounded-xl">
-                      <h2 className="font-semibold flex items-center justify-center text-base">
-                        <StudentIcon className="w-5 h-5 mr-2" />
-                        Scanning Student Attendance
-                      </h2>
-                    </div>
-                  </div>
-                )}
-
-
-                <div className="w-full max-w-sm aspect-square bg-gray-200 rounded-xl overflow-hidden shadow-inner relative flex items-center justify-center">
-                   <QRScanner onScanSuccess={handleScanSuccess} onScanError={handleScanError} />
-                   {isSyncing && (
-                     <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center text-gray-800 z-10 rounded-xl">
-                        <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span className="mt-3 text-lg font-semibold">Syncing...</span>
-                     </div>
-                   )}
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center p-4 sm:p-6 lg:p-8">
+        <div className="w-full max-w-5xl mx-auto">
+            <header className="text-center mb-8">
+                <div className="flex flex-col items-center justify-center gap-2 mb-2">
+                    <PmShriLogo className="h-12 w-auto" />
+                    <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-800 tracking-tight">
+                        QR Attendance
+                    </h1>
                 </div>
-                
-                <div className="h-20 mt-4 w-full">
-                    {lastScan && (
-                        <div className={`${
-                            lastScan.success 
-                            ? 'bg-green-100 border-green-400 text-green-800' 
-                            : 'bg-red-100 border-red-400 text-red-800'
-                          } border-l-4 p-4 rounded-lg`} role="alert">
-                            <div className="flex items-start">
-                                <CheckCircleIcon className={`w-6 h-6 mr-3 flex-shrink-0 mt-0.5 ${lastScan.success ? 'text-green-500' : 'text-red-500'}`}/>
-                                <div>
-                                    <p className="font-bold">{lastScan.success ? 'Success' : 'Error'}</p>
-                                    <p className="text-sm">{lastScan.message}</p>
+                <p className="text-slate-500">
+                    A seamless QR code attendance solution for PM SHRI Schools.
+                </p>
+            </header>
+
+            <main className="flex flex-col lg:flex-row gap-8 items-start">
+                <div className="w-full lg:w-1/2 flex flex-col items-center bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                    {is_admin ? (
+                      <div className="w-full max-w-xs mb-6">
+                          <div className="flex items-center space-x-2 bg-gray-100 rounded-xl p-1">
+                              <ModeButton targetMode={AttendanceMode.Student}>
+                                  <StudentIcon className="w-5 h-5 mr-2" /> Student
+                              </ModeButton>
+                              <ModeButton targetMode={AttendanceMode.Teacher}>
+                                  <TeacherIcon className="w-5 h-5 mr-2" /> Teacher
+                              </ModeButton>
+                          </div>
+                      </div>
+                    ) : (
+                      <div className="w-full max-w-xs mb-6 text-center">
+                        <div className="p-3 bg-blue-50 text-blue-800 rounded-xl border border-blue-200">
+                          <h2 className="font-semibold flex items-center justify-center text-base">
+                            <StudentIcon className="w-5 h-5 mr-2" />
+                            Scanning Student Attendance
+                          </h2>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="w-full max-w-sm aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-inner relative flex items-center justify-center">
+                       <QRScanner onScanSuccess={handleScanSuccess} onScanError={handleScanError} />
+                       {isSyncing && (
+                         <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center text-gray-800 z-10 rounded-xl backdrop-blur-sm">
+                            <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span className="mt-3 text-lg font-semibold">Syncing...</span>
+                         </div>
+                       )}
+                    </div>
+                    
+                    <div className="h-20 mt-4 w-full">
+                        {lastScan && (
+                            <div className={`${
+                                lastScan.success 
+                                ? 'bg-green-100 border-green-400 text-green-800' 
+                                : 'bg-red-100 border-red-400 text-red-800'
+                              } border-l-4 p-4 rounded-lg shadow-sm`} role="alert">
+                                <div className="flex items-start">
+                                    <CheckCircleIcon className={`w-6 h-6 mr-3 flex-shrink-0 mt-0.5 ${lastScan.success ? 'text-green-500' : 'text-red-500'}`}/>
+                                    <div>
+                                        <p className="font-bold">{lastScan.success ? 'Success' : 'Error'}</p>
+                                        <p className="text-sm">{lastScan.message}</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
-            </div>
-            <div className="w-full lg:w-1/2">
-                <AttendanceLog records={records} />
-            </div>
-        </main>
+                <div className="w-full lg:w-1/2">
+                    <AttendanceLog records={records} />
+                </div>
+            </main>
+        </div>
     </div>
   );
 };

@@ -10,7 +10,7 @@ const SyncStatusIcon: React.FC<{ status: AttendanceRecord['syncStatus'] }> = ({ 
     switch (status) {
         case 'syncing':
             return (
-                <svg className="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <title>Syncing</title>
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -50,7 +50,7 @@ const AttendanceStatusBadge: React.FC<{ status?: AttendanceStatus }> = ({ status
             break;
         case 'Present':
         default:
-             colorClasses = "bg-gray-100 text-gray-800";
+             colorClasses = "bg-slate-100 text-slate-800";
             break;
     }
     
@@ -73,23 +73,29 @@ const AttendanceLog: React.FC<AttendanceLogProps> = ({ records }) => {
 
   return (
     <div className="w-full mt-8 lg:mt-0">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Attendance Log</h2>
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
-        <div className="max-h-[28rem] overflow-y-auto">
+      <h2 className="text-2xl font-bold text-slate-800 mb-4 text-center">Attendance Log</h2>
+      <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-200">
+        <div className="max-h-[34rem] overflow-y-auto">
           {records.length === 0 ? (
-            <p className="text-center text-gray-500 p-8">No attendance records yet. Start scanning!</p>
+            <div className="text-center text-slate-500 p-8 flex flex-col items-center">
+              <svg className="w-16 h-16 text-slate-300 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              <p className="font-semibold">No attendance records yet.</p>
+              <p className="text-sm">Start scanning to see the log.</p>
+            </div>
           ) : (
-            <ul className="divide-y divide-gray-200">
+            <ul className="divide-y divide-slate-200">
               {records.map((record) => (
-                <li key={record.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors duration-150">
+                <li key={record.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors duration-150">
                   <div className="flex items-center flex-1 min-w-0">
-                    <span className={`mr-4 p-2 rounded-full self-start ${record.mode === AttendanceMode.Student ? 'bg-blue-100 text-blue-700' : 'bg-teal-100 text-teal-700'}`}>
+                    <span className={`mr-4 p-2.5 rounded-full self-start ${record.mode === AttendanceMode.Student ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
                       {record.mode === AttendanceMode.Student ? <StudentIcon className="w-5 h-5" /> : <TeacherIcon className="w-5 h-5" />}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-800 truncate">{record.mode} ID: {parseId(record.decodedText)}</p>
+                      <p className="font-semibold text-slate-800 truncate">{record.mode} ID: {parseId(record.decodedText)}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-slate-500">
                           {record.timestamp.toLocaleTimeString()}
                         </p>
                         <AttendanceStatusBadge status={record.attendanceStatus} />

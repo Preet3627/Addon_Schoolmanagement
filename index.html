@@ -1,177 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QR Attendance - School Management System Integration</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f0f0f7; /* Dashboard BG */
-        color: #374151; /* gray-700 */
-        scroll-behavior: smooth;
-      }
-      .pm-text { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 32px; letter-spacing: -1px; }
-      .step-card {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0; /* slate-200 */
-        border-radius: 0.5rem;
-        padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        height: 100%;
-        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-      }
-      .step-number {
-        background-color: #3c8dbc; /* SMS Dashboard Blue */
-        color: white;
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 9999px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 1.125rem;
-        margin-bottom: 1rem;
-        flex-shrink: 0;
-      }
-      /* Style for code block */
-      pre code {
-        display: block;
-        padding: 0;
-        font-family: 'Roboto Mono', monospace;
-        font-size: 0.875rem;
-        color: #334155; /* slate-700 */
-        white-space: pre-wrap;
-        word-break: break-all;
-        background-color: transparent;
-      }
-    </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "html5-qrcode": "https://aistudiocdn.com/html5-qrcode@^2.3.8"
   }
 }
 </script>
-</head>
-  <body>
-    <div class="container mx-auto px-4 py-8 sm:py-12 lg:py-16 max-w-5xl">
-      
-      <!-- Header Section -->
-      <header class="text-center mb-16">
-        <div class="flex items-center justify-center gap-4 mb-4">
-          <img src="https://ponsrischool.in/wp-content/uploads/2025/03/cropped-download.png" alt="PM SHRI Prathmik Vidhyamandir Ponsri Logo" class="h-20 w-20">
-        </div>
-        <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight mb-2">
-          PM SHRI Prathmik Vidhyamandir Ponsri
-        </h1>
-        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-          QR Code Attendance System for School Management System Plugin
-        </p>
-      </header>
 
-      <!-- How It Works Section -->
-      <section class="mb-16">
-        <h2 class="text-3xl font-bold text-center mb-10 text-gray-800">The Complete Workflow</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          <!-- Step 1: Generate -->
-          <div class="flex flex-col items-center">
-            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-white border border-gray-200 shadow-sm mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h4a2 2 0 012 2v1m-4 0h4" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 14h.01" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 14h.01" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 14h.01" />
-              </svg>
-            </div>
-            <h3 class="font-bold text-lg mb-2 text-gray-900">1. Print ID Cards</h3>
-            <p class="text-gray-600 text-sm max-w-xs mx-auto">
-              Go to **School Management &rarr; Bulk Print ID Cards**, select a class, and generate printable ID cards for all students in one go.
-            </p>
-          </div>
-          <!-- Step 2: Scan -->
-          <div class="flex flex-col items-center">
-            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-white border border-gray-200 shadow-sm mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h-1m-1 6v-1M4 12H3m1 6l-1-1M4 6l1 1m15 0l-1 1M9 4h6a2 2 0 012 2v6m-8 8H5a2 2 0 01-2-2V9a2 2 0 012-2h6" />
-              </svg>
-            </div>
-            <h3 class="font-bold text-lg mb-2 text-gray-900">2. Scan Attendance</h3>
-            <p class="text-gray-600 text-sm max-w-xs mx-auto">
-              Navigate to the **School Management &rarr; Scan Attendance** menu in WordPress to launch the scanner on any device with a camera.
-            </p>
-          </div>
-          <!-- Step 3: Sync -->
-          <div class="flex flex-col items-center">
-            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-white border border-gray-200 shadow-sm mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M12 11v6m0 0l-2-2m2 2l2-2" />
-              </svg>
-            </div>
-            <h3 class="font-bold text-lg mb-2 text-gray-900">3. Sync to Dashboard</h3>
-            <p class="text-gray-600 text-sm max-w-xs mx-auto">
-              Attendance is instantly and automatically saved to your School Management System dashboard. No manual entry needed.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Live Demo Section -->
-      <section class="mb-16">
-        <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">Live Demo</h2>
-        <div id="smgt-qr-attendance-app">
-          <!-- The React app will be mounted here. -->
-        </div>
-      </section>
-
-      <!-- Installation Guide Section -->
-      <section class="mb-16">
-        <h2 class="text-3xl font-bold text-center mb-10 text-gray-800">How to Create & Install Your Plugin</h2>
-        
-        <!-- Part 1: Create the ZIP -->
-        <div class="max-w-3xl mx-auto mb-12">
-            <h3 class="text-xl font-bold text-center mb-6 text-gray-700">Part 1: Create the Plugin <code>.zip</code> File</h3>
-            <div class="space-y-6">
-                <!-- Step 1 -->
-                <div class="flex items-start gap-4 p-4 bg-white border border-slate-200 rounded-lg shadow-sm">
-                    <div class="step-number mt-1">1</div>
-                    <div>
-                        <h4 class="font-bold text-lg text-gray-900">Create the File</h4>
-                        <p class="text-gray-600">On your computer, create a new file and name it exactly: <code>smgt-qr-attendance.php</code></p>
-                    </div>
-                </div>
-                <!-- Step 2 -->
-                <div class="flex items-start gap-4 p-4 bg-white border border-slate-200 rounded-lg shadow-sm">
-                    <div class="step-number mt-1">2</div>
-                    <div>
-                        <h4 class="font-bold text-lg text-gray-900">Paste the Code</h4>
-                        <p class="text-gray-600 mb-4">Copy the complete PHP code below and paste it into the file you just created.</p>
-                        <!-- Code Block nested here -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-lg relative">
-                            <div class="px-4 py-2 border-b border-slate-200 text-xs text-slate-500 flex justify-between items-center">
-                              <span>smgt-qr-attendance.php</span>
-                              <button id="copy-plugin-code-btn" class="inline-flex items-center px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-50 focus:ring-indigo-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                                <span id="copy-plugin-btn-text">Copy Code</span>
-                              </button>
-                            </div>
-                            <div class="p-4 overflow-x-auto max-h-96">
-                              <pre><code id="plugin-code-snippet" class="language-php">
-&lt;?php
+<?php
 /**
  * Plugin Name:       School Management System - QR Attendance
  * Description:       A seamless QR code attendance solution for PM SHRI Schools, fully integrated with the School Management System plugin by Mojoomla.
- * Version:           2.0.1
+ * Version:           2.0.7
  * Author:            AI Assistant
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -198,56 +40,116 @@ function smgt_qr_attendance_init() {
 }
 
 function smgt_qr_attendance_dependency_notice() {
-    ?&gt;
-    &lt;div class="notice notice-error is-dismissible"&gt;
-        &lt;p&gt;
-            &lt;?php
+    ?>
+    <div class="notice notice-error is-dismissible">
+        <p>
+            <?php
             echo wp_kses_post(
                 sprintf(
-                    __( 'The &lt;strong&gt;%1$s&lt;/strong&gt; plugin is inactive. It requires the &lt;strong&gt;%2$s&lt;/strong&gt; plugin to be installed and activated. Please activate the required plugin to use the QR attendance features.', 'smgt-qr-attendance' ),
+                    __( 'The <strong>%1$s</strong> plugin is inactive. It requires the <strong>%2$s</strong> plugin to be installed and activated. Please activate the required plugin to use the QR attendance features.', 'smgt-qr-attendance' ),
                     'School Management System - QR Attendance',
                     'School Management System (by Mojoomla)'
                 )
             );
-            ?&gt;
-        &lt;/p&gt;
-    &lt;/div&gt;
-    &lt;?php
+            ?>
+        </p>
+    </div>
+    <?php
 }
 
 function smgt_qr_attendance_load_features() {
-    add_action( 'admin_menu', 'smgt_qr_add_admin_menu_pages' );
+    add_action( 'admin_menu', 'smgt_qr_add_admin_menu_pages', 99 );
     add_action( 'admin_enqueue_scripts', 'smgt_qr_enqueue_scanner_scripts' );
     add_action( 'rest_api_init', 'smgt_qr_register_rest_api' );
     add_action( 'edit_user_profile', 'smgt_qr_display_id_card_section' );
     add_action( 'show_user_profile', 'smgt_qr_display_id_card_section' );
+    add_action('admin_init', 'smgt_qr_handle_download_trigger');
 }
 
+function smgt_qr_handle_download_trigger() {
+    if (isset($_GET['page']) && $_GET['page'] === 'smgt-bulk-print-ids' && isset($_GET['download_source'])) {
+        if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_key($_GET['_wpnonce']), 'download_plugin_source' ) ) {
+            wp_die('Security check failed!');
+        }
+        if ( ! current_user_can('manage_options') ) {
+            wp_die('You do not have permission to do this.');
+        }
+        smgt_qr_zip_and_download_plugin();
+    }
+}
+
+function smgt_qr_zip_and_download_plugin() {
+    $plugin_slug = basename(__DIR__);
+    $plugin_dir = plugin_dir_path(__FILE__);
+    $zip_file_name = $plugin_slug . '.zip';
+    $zip_file_path = sys_get_temp_dir() . '/' . $zip_file_name;
+
+    if (class_exists('ZipArchive')) {
+        $zip = new ZipArchive();
+        if ($zip->open($zip_file_path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
+            wp_die("Could not create ZIP archive.");
+        }
+
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($plugin_dir, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+        
+        $rootPath = realpath($plugin_dir);
+
+        foreach ($files as $name => $file) {
+            if (!$file->isDir()) {
+                $filePath = $file->getRealPath();
+                $relativePath = $plugin_slug . '/' . substr($filePath, strlen($rootPath) + 1);
+                $zip->addFile($filePath, $relativePath);
+            }
+        }
+        $zip->close();
+    } else {
+        wp_die("ZipArchive class not found. Please enable the Zip PHP extension.");
+    }
+    
+    if (file_exists($zip_file_path)) {
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . $zip_file_name . '"');
+        header('Content-Length: ' . filesize($zip_file_path));
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        readfile($zip_file_path);
+        unlink($zip_file_path); // Clean up the temp file
+        exit;
+    } else {
+        wp_die("Could not create the zip file.");
+    }
+}
+
+
 function smgt_qr_add_admin_menu_pages() {
-    // Corrected: Use the main parent slug 'smgt_school' for both pages.
     add_submenu_page( 'smgt_school', 'Scan Attendance', 'Scan Attendance', 'manage_options', 'smgt-scan-attendance', 'smgt_qr_scanner_page_render' );
     add_submenu_page( 'smgt_school', 'Bulk Print ID Cards', 'Bulk Print ID Cards', 'manage_options', 'smgt-bulk-print-ids', 'smgt_qr_bulk_print_page_render' );
 }
 
 function smgt_qr_scanner_page_render() {
-    echo '&lt;div class="wrap"&gt;&lt;h1&gt;Scan QR Code Attendance&lt;/h1&gt;&lt;div id="smgt-qr-attendance-app"&gt;&lt;/div&gt;&lt;/div&gt;';
+    echo '<div class="wrap"><h1>Scan QR Code Attendance</h1><div id="smgt-qr-attendance-app"></div></div>';
 }
 
 function smgt_qr_enqueue_scanner_scripts( $hook ) {
     $current_screen = get_current_screen();
-    // The hook for submenu pages is `toplevel_page_` followed by the page slug.
-    if ( 'school-management_page_smgt-scan-attendance' !== $current_screen->id && 'school-management_page_smgt-bulk-print-ids' !== $current_screen->id ) return;
     
-    // Check if we are on the scanner page to enqueue scripts
-    if ( 'school-management_page_smgt-scan-attendance' === $current_screen->id ) {
-        $script_url = 'https://aistudio.google.com/app/index.js';
-        wp_enqueue_script( 'smgt-qr-attendance-app', $script_url, ['wp-element'], '2.0.1', true );
-        wp_localize_script( 'smgt-qr-attendance-app', 'smgtQrAttendanceData', [
-            'apiUrl'   => rest_url( 'smgt-qr-attendance/v1/log' ),
-            'nonce'    => wp_create_nonce( 'wp_rest' ),
-            'is_admin' => current_user_can( 'manage_options' ),
-        ]);
+    $scanner_screen_id = 'smgt_school_page_smgt-scan-attendance';
+
+    if ( !is_object($current_screen) || $current_screen->id !== $scanner_screen_id ) {
+        return;
     }
+    
+    $script_url = plugins_url( 'index.tsx', __FILE__ );
+    
+    wp_enqueue_script( 'smgt-qr-attendance-app', $script_url, ['wp-element'], '2.0.7', true );
+    wp_localize_script( 'smgt-qr-attendance-app', 'smgtQrAttendanceData', [
+        'apiUrl'   => rest_url( 'smgt-qr-attendance/v1/log' ),
+        'nonce'    => wp_create_nonce( 'wp_rest' ),
+        'is_admin' => current_user_can( 'manage_options' ),
+    ]);
 }
 
 function smgt_qr_register_rest_api() {
@@ -271,89 +173,137 @@ function smgt_qr_log_attendance_callback( WP_REST_Request $request ) {
     $user = get_userdata($user_id);
     if (!$user) return new WP_Error( 'user_not_found', "User with ID {$user_id} not found.", ['status' => 404] );
 
-    $attendance_table = $wpdb->prefix . 'smgt_attendence';
+    $user_roles = $user->roles;
+    $user_role = array_shift($user_roles);
     $current_date = date('Y-m-d');
+    $attend_by = get_current_user_id();
+    $result = false;
 
-    $existing = $wpdb->get_var( $wpdb->prepare( "SELECT attendence_id FROM $attendance_table WHERE user_id = %d AND attendence_date = %s", $user_id, $current_date ) );
+    if ($user_role == 'student') {
+        $table = $wpdb->prefix . 'smgt_sub_attendance';
+        $existing = $wpdb->get_var( $wpdb->prepare( "SELECT attendance_id FROM $table WHERE user_id = %d AND attendance_date = %s AND categories = 'class'", $user_id, $current_date ) );
+        
+        if ($existing) {
+            return new WP_REST_Response( [ 'success' => true, 'message' => "Attendance for student {$user->display_name} already marked for today.", 'attendanceStatus' => 'Present' ], 200 );
+        }
 
-    if ( $existing ) {
-        return new WP_REST_Response( [ 'success' => true, 'message' => "Attendance for {$user->display_name} already marked.", 'attendanceStatus' => 'Present' ], 200 );
+        $class_id = get_user_meta( $user_id, 'class_name', true );
+        $section_id = get_user_meta( $user_id, 'class_section', true );
+
+        $result = $wpdb->insert( $table, [
+            'user_id' => $user_id, 
+            'class_id' => $class_id ? absint($class_id) : 0, 
+            'section_id' => $section_id ? absint($section_id) : 0,
+            'attend_by' => $attend_by,
+            'attendance_date' => $current_date,
+            'status' => 'Present', 
+            'role_name' => 'student',
+            'categories' => 'class',
+            'comment' => 'Marked via QR Scan'
+        ]);
+    } elseif ($user_role == 'teacher') {
+        $table = $wpdb->prefix . 'attendence';
+        $existing = $wpdb->get_var( $wpdb->prepare( "SELECT attendence_id FROM $table WHERE user_id = %d AND attendence_date = %s AND role_name = 'teacher'", $user_id, $current_date ) );
+
+        if ($existing) {
+            return new WP_REST_Response( [ 'success' => true, 'message' => "Attendance for teacher {$user->display_name} already marked for today.", 'attendanceStatus' => 'Present' ], 200 );
+        }
+        
+        $result = $wpdb->insert( $table, [
+            'user_id' => $user_id, 
+            'class_id' => 0,
+            'attend_by' => $attend_by,
+            'attendence_date' => $current_date,
+            'status' => 'Present', 
+            'role_name' => 'teacher',
+            'comment' => 'Marked via QR Scan'
+        ]);
+    } else {
+        return new WP_Error( 'invalid_role', 'QR Scan is only for students and teachers.', ['status' => 400] );
     }
-    
-    $class_id = get_user_meta( $user_id, 'class_name', true );
-
-    $result = $wpdb->insert( $attendance_table, [
-        'user_id' => $user_id, 'class_id' => $class_id ? absint($class_id) : 0, 'attendence_date' => $current_date,
-        'status' => 'Present', 'attendence_by' => get_current_user_id(), 'comment' => 'Marked via QR Scan'
-    ]);
 
     if ( $result === false ) return new WP_Error( 'db_error', 'Could not save attendance.', ['status' => 500] );
 
     return new WP_REST_Response( [ 'success' => true, 'message' => "Attendance marked for {$user->display_name}.", 'attendanceStatus' => 'On Time' ], 200 );
 }
 
+
 function smgt_qr_display_id_card_section( $user ) {
     if ( !in_array('student', $user->roles) && !in_array('teacher', $user->roles) ) return;
-    ?&gt;
-    &lt;h3&gt;QR Attendance ID Card&lt;/h3&gt;
-    &lt;table class="form-table"&gt;&lt;tr&gt;&lt;th&gt;&lt;label&gt;ID Card&lt;/label&gt;&lt;/th&gt;&lt;td&gt;
-    &lt;?php smgt_qr_render_single_id_card($user); ?&gt;
-    &lt;p class="description"&gt;Use the browser's print function (Ctrl/Cmd+P) to print this ID card.&lt;/p&gt;
-    &lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-    &lt;?php
+    ?>
+    <h3>QR Attendance ID Card</h3>
+    <table class="form-table"><tr><th><label>ID Card</label></th><td>
+    <?php smgt_qr_render_single_id_card($user); ?>
+    <p class="description">Use the browser's print function (Ctrl/Cmd+P) to print this ID card.</p>
+    </td></tr></table>
+    <?php
 }
 
 function smgt_qr_bulk_print_page_render() {
     global $wpdb;
-    ?&gt;
-    &lt;div class="wrap"&gt;
-        &lt;h1&gt;Bulk Print Student ID Cards&lt;/h1&gt;
-        &lt;p&gt;Select a class to generate printable ID cards for all students.&lt;/p&gt;
-        &lt;form method="POST" class="smgt-qr-print-form"&gt;
-            &lt;?php
+    ?>
+    <div class="wrap">
+        <h1>Bulk Print Student ID Cards</h1>
+
+        <div style="margin-bottom: 20px; padding: 1px 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 4px;">
+            <h3>Plugin Management</h3>
+            <p>Download the full source code for this plugin as a .zip file. This is useful for backups or manual installations.</p>
+            <?php
+            $download_nonce = wp_create_nonce('download_plugin_source');
+            $download_url = admin_url('admin.php?page=smgt-bulk-print-ids&download_source=true&_wpnonce=' . $download_nonce);
+            ?>
+            <p><a href="<?php echo esc_url($download_url); ?>" class="button button-secondary">
+                <span class="dashicons dashicons-download" style="vertical-align: text-bottom; margin-right: 5px;"></span>
+                Download Plugin Source (.zip)
+            </a></p>
+        </div>
+
+        <p>Select a class to generate printable ID cards for all students.</p>
+        <form method="POST" class="smgt-qr-print-form">
+            <?php
             $class_table = $wpdb->prefix . 'smgt_class';
             $classes = $wpdb->get_results("SELECT class_id, class_name FROM $class_table"); 
-            ?&gt;
-            &lt;label for="smgt_class_select"&gt;Select Class:&lt;/label&gt;
-            &lt;select name="smgt_class_select" id="smgt_class_select"&gt;
-                &lt;option value=""&gt;-- Select a Class --&lt;/option&gt;
-                &lt;?php foreach ($classes as $class) : ?&gt;
-                    &lt;option value="&lt;?php echo esc_attr($class-&gt;class_id); ?&gt;" &lt;?php selected(isset($_POST['smgt_class_select']) ? $_POST['smgt_class_select'] : '', $class-&gt;class_id); ?&gt;&gt;
-                        &lt;?php echo esc_html($class-&gt;class_name); ?&gt;
-                    &lt;/option&gt;
-                &lt;?php endforeach; ?&gt;
-            &lt;/select&gt;
-            &lt;input type="submit" name="generate_id_cards" class="button button-primary" value="Generate"&gt;
-        &lt;/form&gt;
-        &lt;hr/&gt;
-        &lt;div class="smgt-qr-id-cards-container"&gt;
-            &lt;?php
+            ?>
+            <label for="smgt_class_select">Select Class:</label>
+            <select name="smgt_class_select" id="smgt_class_select">
+                <option value="">-- Select a Class --</option>
+                <?php foreach ($classes as $class) : ?>
+                    <option value="<?php echo esc_attr($class->class_id); ?>" <?php selected(isset($_POST['smgt_class_select']) ? (int) $_POST['smgt_class_select'] : 0, $class->class_id); ?>>
+                        <?php echo esc_html($class->class_name); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <input type="submit" name="generate_id_cards" class="button button-primary" value="Generate">
+        </form>
+        <hr/>
+        <div class="smgt-qr-id-cards-container">
+            <?php
             if ( isset($_POST['generate_id_cards']) && !empty($_POST['smgt_class_select']) ) {
                 $selected_class_id = absint($_POST['smgt_class_select']);
                 $class_name = $wpdb->get_var($wpdb->prepare("SELECT class_name FROM $class_table WHERE class_id=%d", $selected_class_id));
-                echo "&lt;h2&gt;ID Cards for " . esc_html($class_name) . "&lt;/h2&gt;";
-                echo '&lt;p&gt;Use your browser\'s print function (Ctrl/Cmd + P) to print these cards.&lt;/p&gt;';
+                echo "<h2>ID Cards for " . esc_html($class_name) . "</h2>";
+                echo '<p>Use your browser\'s print function (Ctrl/Cmd + P) to print these cards.</p>';
                 
                 $students = get_users( ['role' => 'student', 'meta_key' => 'class_name', 'meta_value' => $selected_class_id] );
                 
                 if (empty($students)) {
-                    echo '&lt;p&gt;No students found for this class.&lt;/p&gt;';
+                    echo '<p>No students found for this class.</p>';
                 } else {
                     foreach ($students as $student) {
                         smgt_qr_render_single_id_card($student);
                     }
                 }
             }
-            ?&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-    &lt;?php
+            ?>
+        </div>
+    </div>
+    <?php
     smgt_qr_id_card_styles(); // Inject CSS
 }
 
 function smgt_qr_render_single_id_card( $user ) {
-    $user_id = $user-&gt;ID;
-    $qr_data_raw = ['id' => $user_id, 'name' => $user-&gt;display_name];
+    $user_id = $user->ID;
+    $qr_data_raw = ['id' => $user_id, 'name' => $user->display_name];
     $qr_data_filtered = apply_filters('smgt_qr_attendance_data', $qr_data_raw, $user_id);
     $qr_data = json_encode($qr_data_filtered);
 
@@ -366,34 +316,34 @@ function smgt_qr_render_single_id_card( $user ) {
     if ( empty($photo_url) ) {
         $photo_url = get_avatar_url( $user_id, ['size' => 150] );
     }
-    ?&gt;
-    &lt;div class="smgt-id-card"&gt;
-        &lt;div class="id-card-header"&gt;
-            &lt;img src="&lt;?php echo esc_url($school_logo_url); ?&gt;" alt="School Logo"&gt;
-            &lt;span&gt;PM SHRI PRATHMIK&lt;br&gt;VIDHYAMANDIR PONSRI&lt;/span&gt;
-        &lt;/div&gt;
-        &lt;div class="id-card-body"&gt;
-            &lt;div class="id-card-photo"&gt;
-                &lt;img src="&lt;?php echo esc_url( $photo_url ); ?&gt;" alt="&lt;?php echo esc_attr( $user-&gt;display_name ); ?&gt;"&gt;
-            &lt;/div&gt;
-            &lt;div class="id-card-info"&gt;
-                &lt;div class="id-card-name"&gt;&lt;?php echo esc_html( $user-&gt;display_name ); ?&gt;&lt;/div&gt;
-                &lt;div class="id-card-details"&gt;
-                    &lt;strong&gt;DOB:&lt;/strong&gt; &lt;?php echo esc_html( $dob ); ?&gt;&lt;br&gt;
-                    &lt;strong&gt;Mobile:&lt;/strong&gt; &lt;?php echo esc_html( $mobile ); ?&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-            &lt;div class="id-card-qr"&gt;
-                &lt;img src="&lt;?php echo esc_url($qr_code_url); ?&gt;" alt="QR Code"&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-    &lt;?php
+    ?>
+    <div class="smgt-id-card">
+        <div class="id-card-header">
+            <img src="<?php echo esc_url($school_logo_url); ?>" alt="School Logo">
+            <span>PM SHRI PRATHMIK<br>VIDHYAMANDIR PONSRI</span>
+        </div>
+        <div class="id-card-body">
+            <div class="id-card-photo">
+                <img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( $user->display_name ); ?>">
+            </div>
+            <div class="id-card-info">
+                <div class="id-card-name"><?php echo esc_html( $user->display_name ); ?></div>
+                <div class="id-card-details">
+                    <strong>DOB:</strong> <?php echo esc_html( $dob ); ?><br>
+                    <strong>Mobile:</strong> <?php echo esc_html( $mobile ); ?>
+                </div>
+            </div>
+            <div class="id-card-qr">
+                <img src="<?php echo esc_url($qr_code_url); ?>" alt="QR Code">
+            </div>
+        </div>
+    </div>
+    <?php
 }
 
 function smgt_qr_id_card_styles() {
-    ?&gt;
-    &lt;style type="text/css"&gt;
+    ?>
+    <style type="text/css">
         .smgt-id-card {
             width: 320px;
             height: 200px;
@@ -436,148 +386,12 @@ function smgt_qr_id_card_styles() {
 
         @media print {
             body { background-color: white; }
-            .smgt-qr-print-form, .wrap > h1, .wrap > p, .wrap > hr, .wrap > h2 { display: none; }
+            .smgt-qr-print-form, .wrap > h1, .wrap > p, .wrap > hr, .wrap > h2, .wrap > div[style*="margin-bottom"] { display: none; }
             .smgt-qr-id-cards-container { margin-top: 0; }
             #wpadminbar, #adminmenumain, #wpfooter { display: none !important; }
             #wpcontent { margin-left: 0 !important; padding-top: 0 !important; }
             .smgt-id-card { box-shadow: none; border: 1px solid #000; }
         }
-    &lt;/style&gt;
-    &lt;?php
+    </style>
+    <?php
 }
-              </code></pre>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                 <!-- Step 3 -->
-                <div class="flex items-start gap-4 p-4 bg-white border border-slate-200 rounded-lg shadow-sm">
-                    <div class="step-number mt-1">3</div>
-                    <div>
-                        <h4 class="font-bold text-lg text-gray-900">Zip the File</h4>
-                        <p class="text-gray-600">Compress the <code>smgt-qr-attendance.php</code> file into a <code>.zip</code> archive. On most systems, you can just right-click the file and choose "Compress" or "Send to &rarr; Compressed (zipped) folder".</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Part 2: Install in WordPress -->
-        <div class="max-w-3xl mx-auto">
-            <h3 class="text-xl font-bold text-center mb-6 text-gray-700">Part 2: Install in WordPress</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <!-- Step 4 -->
-              <div class="step-card">
-                <div class="step-number">4</div>
-                <h3 class="font-bold text-lg mb-2 text-gray-900">Upload Plugin</h3>
-                <p class="text-gray-600 text-sm">In WordPress, go to <strong>Plugins &rarr; Add New &rarr; Upload Plugin</strong> and select the <code>.zip</code> file you just created.</p>
-              </div>
-              <!-- Step 5 -->
-              <div class="step-card">
-                <div class="step-number">5</div>
-                <h3 class="font-bold text-lg mb-2 text-gray-900">Activate</h3>
-                <p class="text-gray-600 text-sm">After uploading, click the <strong>Activate Plugin</strong> button.</p>
-              </div>
-              <!-- Step 6 -->
-              <div class="step-card">
-                <div class="step-number">6</div>
-                <h3 class="font-bold text-lg mb-2 text-gray-900">All Set!</h3>
-                <p class="text-gray-600 text-sm">You can now find the new pages inside the main <strong>School Management</strong> menu.</p>
-              </div>
-            </div>
-        </div>
-      </section>
-
-      <!-- Manual Integration Section -->
-      <section class="mt-16">
-        <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">Customize QR Code Data</h2>
-        <p class="text-center text-gray-600 max-w-2xl mx-auto mb-8">
-          For developers: add the following snippet to your theme's <code>functions.php</code> file to include extra data (like a student's class) in the QR codes.
-        </p>
-        <div class="max-w-3xl mx-auto">
-          <div class="bg-slate-50 border border-slate-200 rounded-lg relative">
-            <div class="px-4 py-2 border-b border-slate-200 text-xs text-slate-500 flex justify-between items-center">
-              <span>PHP Snippet for functions.php</span>
-              <button id="copy-code-btn" class="inline-flex items-center px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-50 focus:ring-indigo-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                <span id="copy-btn-text">Copy</span>
-              </button>
-            </div>
-            <div class="p-4 overflow-x-auto">
-              <pre><code id="code-snippet" class="language-php">
-&lt;?php
-/**
- * Filter to customize QR code data for the SMGT QR Attendance plugin.
- *
- * @param array  $data      The default data for the QR code (['id' => 123, 'name' => '...']).
- * @param int    $user_id   The ID of the user (student/staff).
- * @return array The modified data array.
- */
-add_filter( 'smgt_qr_attendance_data', function( $data, $user_id ) {
-    $user = get_userdata($user_id);
-    if ( in_array('student', $user->roles) ) {
-        // Example: Add a student's class to the QR code.
-        $class_id = get_user_meta( $user_id, 'class_name', true );
-        if ( ! empty( $class_id ) ) {
-            global $wpdb;
-            $class_name = $wpdb->get_var($wpdb->prepare("SELECT class_name FROM {$wpdb->prefix}smgt_class WHERE class_id=%d", $class_id));
-            $data['class'] = $class_name;
-        }
-    }
-    return $data;
-}, 10, 2 );
-              </code></pre>
-            </div>
-          </div>
-        </div>
-      </section>
-
-    </div>
-
-    <script>
-      window.smgtQrAttendanceData = {
-        apiUrl: '/wp-json/smgt-qr-attendance/v1/log', // Example API URL for local dev
-        nonce: 'a1b2c3d4e5', // Example nonce for local dev
-        is_admin: true // For the live demo, we assume the user is an admin. In WordPress, this is set dynamically.
-      };
-    </script>
-
-    <script type="module" src="/index.tsx"></script>
-
-    <script>
-      function setupCopyButton(buttonId, snippetId, textId) {
-        const copyButton = document.getElementById(buttonId);
-        if (copyButton) {
-          const codeSnippet = document.getElementById(snippetId);
-          const copyButtonText = document.getElementById(textId);
-          const originalText = copyButtonText.textContent;
-
-          copyButton.addEventListener('click', () => {
-            if (!codeSnippet || !navigator.clipboard) { return; }
-            
-            const tempEl = document.createElement('textarea');
-            tempEl.innerHTML = codeSnippet.textContent.trim();
-            const codeToCopy = tempEl.value;
-
-            navigator.clipboard.writeText(codeToCopy).then(() => {
-              copyButtonText.textContent = 'Copied!';
-              copyButton.classList.add('bg-green-600', 'hover:bg-green-600', 'text-white');
-              copyButton.classList.remove('bg-slate-200', 'hover:bg-slate-300', 'text-slate-700');
-              setTimeout(() => {
-                copyButtonText.textContent = originalText;
-                copyButton.classList.remove('bg-green-600', 'hover:bg-green-600', 'text-white');
-                copyButton.classList.add('bg-slate-200', 'hover:bg-slate-300', 'text-slate-700');
-              }, 2000);
-            }).catch(err => {
-              copyButtonText.textContent = 'Failed!';
-              console.error('Failed to copy text: ', err);
-              setTimeout(() => { copyButtonText.textContent = originalText; }, 2000);
-            });
-          });
-        }
-      }
-
-      setupCopyButton('copy-code-btn', 'code-snippet', 'copy-btn-text');
-      setupCopyButton('copy-plugin-code-btn', 'plugin-code-snippet', 'copy-plugin-btn-text');
-    </script>
-  </body>
-</html>
