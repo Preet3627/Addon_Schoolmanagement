@@ -10,7 +10,7 @@ const SyncStatusIcon: React.FC<{ status: AttendanceRecord['syncStatus'] }> = ({ 
     switch (status) {
         case 'syncing':
             return (
-                <svg className="animate-spin h-5 w-5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <title>Syncing</title>
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -43,14 +43,14 @@ const AttendanceStatusBadge: React.FC<{ status?: AttendanceStatus }> = ({ status
 
     switch(status) {
         case 'On Time':
-            colorClasses = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+            colorClasses = "bg-green-100 text-green-800";
             break;
         case 'Late':
-            colorClasses = "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300";
+            colorClasses = "bg-orange-100 text-orange-800";
             break;
         case 'Present':
         default:
-             colorClasses = "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300";
+             colorClasses = "bg-gray-100 text-gray-800";
             break;
     }
     
@@ -73,29 +73,29 @@ const AttendanceLog: React.FC<AttendanceLogProps> = ({ records }) => {
 
   return (
     <div className="w-full mt-8 lg:mt-0">
-      <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 text-center">Attendance Log</h2>
-      <div className="bg-white dark:bg-slate-900 shadow-lg rounded-lg overflow-hidden">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Attendance Log</h2>
+      <div className="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
         <div className="max-h-[28rem] overflow-y-auto">
           {records.length === 0 ? (
-            <p className="text-center text-slate-500 dark:text-slate-400 p-8">No attendance records yet. Start scanning!</p>
+            <p className="text-center text-gray-500 p-8">No attendance records yet. Start scanning!</p>
           ) : (
-            <ul className="divide-y divide-slate-200 dark:divide-slate-700">
+            <ul className="divide-y divide-gray-200">
               {records.map((record) => (
-                <li key={record.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
+                <li key={record.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors duration-150">
                   <div className="flex items-center flex-1 min-w-0">
-                    <span className={`mr-4 p-2 rounded-full self-start ${record.mode === AttendanceMode.Student ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400' : 'bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400'}`}>
+                    <span className={`mr-4 p-2 rounded-full self-start ${record.mode === AttendanceMode.Student ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
                       {record.mode === AttendanceMode.Student ? <StudentIcon className="w-5 h-5" /> : <TeacherIcon className="w-5 h-5" />}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-800 dark:text-slate-100 truncate">{record.mode} ID: {parseId(record.decodedText)}</p>
+                      <p className="font-semibold text-gray-800 truncate">{record.mode} ID: {parseId(record.decodedText)}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-gray-500">
                           {record.timestamp.toLocaleTimeString()}
                         </p>
                         <AttendanceStatusBadge status={record.attendanceStatus} />
                       </div>
                        {record.syncStatus === 'error' && record.syncMessage && (
-                          <p className={`text-xs mt-1 text-red-500 dark:text-red-400`}>{record.syncMessage}</p>
+                          <p className={`text-xs mt-1 text-red-600`}>{record.syncMessage}</p>
                        )}
                     </div>
                   </div>

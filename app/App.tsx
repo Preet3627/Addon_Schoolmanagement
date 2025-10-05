@@ -9,6 +9,8 @@ declare global {
     qrAttendanceData: {
       apiUrl: string;
       nonce: string;
+      // FIX: Added optional is_admin property to match the global type declaration in App.tsx and resolve the type error.
+      is_admin?: boolean;
     };
   }
 }
