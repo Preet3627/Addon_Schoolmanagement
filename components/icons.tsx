@@ -1,5 +1,15 @@
 import React from 'react';
 
+export const PmShriLogo: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg" aria-label="PM SHRI Logo">
+      <style>
+        {`.pm-text { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 32px; letter-spacing: -1px; }`}
+      </style>
+      <text x="0" y="30" className="pm-text" fill="#00509E">PM</text>
+      <text x="52" y="30" className="pm-text" fill="#FF9933">SHRI</text>
+    </svg>
+  );
+
 // Main App Icons
 export const CameraIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -29,37 +39,4 @@ export const CheckCircleIcon: React.FC<{ className?: string }> = ({ className })
     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
     <polyline points="22 4 12 14.01 9 11.01"></polyline>
   </svg>
-);
-
-// Guide UI Icons
-export const DirectoryIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg aria-hidden="true" viewBox="0 0 16 16" version="1.1" className={className} fill="currentColor">
-        <path d="M.513 1.513A1.75 1.75 0 0 1 1.75 1h3.5c.55 0 1.07.26 1.4.7l.9 1.2c.33.44.85.7 1.4.7h3.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0 1 12.25 15H1.75A1.75 1.75 0 0 1 0 13.25V2.75c0-.464.184-.91.513-1.237Z"></path>
-    </svg>
-);
-  
-export const FileCodeIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg aria-hidden="true" viewBox="0 0 16 16" version="1.1" className={className} fill="currentColor">
-        <path d="M.22 3.22a.75.75 0 0 1 1.06 0L4.5 6.44l3.22-3.22a.75.75 0 0 1 1.06 1.06L5.56 7.5l3.22 3.22a.75.75 0 0 1-1.06 1.06L4.5 8.56l-3.22 3.22a.75.75 0 0 1-1.06-1.06L3.44 7.5.22 4.28a.75.75 0 0 1 0-1.06Zm12.28 7.28a.75.75 0 0 1 0 1.06l-3.5 3.5a.75.75 0 0 1-1.06-1.06l3.5-3.5a.75.75 0 0 1 1.06 0Zm-3.5-3.5a.75.75 0 0 1 1.06 0l3.5 3.5a.75.75 0 0 1-1.06 1.06l-3.5-3.5a.75.75 0 0 1 0-1.06Z"></path>
-    </svg>
-);
-
-export const DownloadIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-        <polyline points="7 10 12 15 17 10"></polyline>
-        <line x1="12" y1="15" x2="12" y2="3"></line>
-    </svg>
-);
-
-export const CopyIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg aria-hidden="true" viewBox="0 0 16 16" version="1.1" className={className} fill="currentColor">
-        <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path>
-    </svg>
-);
-
-export const CheckIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg aria-hidden="true" viewBox="0 0 16 16" version="1.1" className={className} fill="currentColor">
-        <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path>
-    </svg>
 );

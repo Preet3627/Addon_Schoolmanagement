@@ -2,9 +2,8 @@ import React, { useState, useCallback } from 'react';
 import QRScanner from './components/QRScanner';
 import AttendanceLog from './components/AttendanceLog';
 import { AttendanceMode, AttendanceRecord, AttendanceStatus } from './types';
-import { CameraIcon, StudentIcon, TeacherIcon, CheckCircleIcon } from './components/icons';
+import { StudentIcon, TeacherIcon, CheckCircleIcon, PmShriLogo } from './components/icons';
 
-// Access data passed from WordPress (API URL and nonce)
 declare global {
   interface Window {
     qrAttendanceData: {
@@ -15,7 +14,6 @@ declare global {
 }
 const { apiUrl, nonce } = window.qrAttendanceData || { apiUrl: '', nonce: '' };
 
-
 const App: React.FC = () => {
   const [mode, setMode] = useState<AttendanceMode>(AttendanceMode.Student);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
@@ -23,26 +21,23 @@ const App: React.FC = () => {
   const [lastScan, setLastScan] = useState<{ text: string; mode: AttendanceMode; success: boolean, message: string } | null>(null);
 
   const handleScanSuccess = useCallback(async (decodedText: string) => {
-    if (isSyncing) return; // Prevent multiple requests while one is in progress
+    if (isSyncing) return;
     setIsSyncing(true);
     setLastScan(null);
 
     const now = new Date();
     const tempId = `${decodedText}-${now.toISOString()}`;
-
     let attendanceMode = mode;
-    // Optional: Smartly parse QR code to see if it contains mode information
+    
     try {
         const qrData = JSON.parse(decodedText);
         if (qrData.mode && Object.values(AttendanceMode).includes(qrData.mode)) {
             attendanceMode = qrData.mode;
-            setMode(qrData.mode);
         }
     } catch (e) {
-        // Not a JSON or doesn't have a mode, so we'll just use the manually selected one.
+        // Not JSON, use selected mode
     }
 
-    // Add record to log immediately with 'syncing' status for instant feedback
     const newRecord: AttendanceRecord = {
       id: tempId,
       decodedText,
@@ -54,7 +49,7 @@ const App: React.FC = () => {
 
     try {
       if (!apiUrl) {
-        throw new Error("API configuration is missing. Ensure the plugin is configured correctly.");
+        throw new Error("API configuration is missing.");
       }
 
       const response = await fetch(apiUrl, {
@@ -72,28 +67,25 @@ const App: React.FC = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'An unknown error occurred on the server.');
+        throw new Error(result.message || 'An unknown error occurred.');
       }
       
       const attendanceStatus: AttendanceStatus | undefined = result.attendanceStatus;
 
-      // Update the record's status to 'synced' on success
       setRecords(prev => prev.map(r => r.id === tempId ? { 
           ...r, 
           syncStatus: 'synced', 
           syncMessage: result.message,
           attendanceStatus: attendanceStatus,
         } : r));
-      setLastScan({ text: decodedText, mode: attendanceMode, success: true, message: result.message || "Attendance recorded successfully." });
+      setLastScan({ text: decodedText, mode: attendanceMode, success: true, message: result.message || "Success!" });
 
     } catch (error: any) {
-      const errorMessage = error.message || 'Failed to connect to the server.';
-      // Update the record's status to 'error' on failure
+      const errorMessage = error.message || 'Failed to connect to server.';
       setRecords(prev => prev.map(r => r.id === tempId ? { ...r, syncStatus: 'error', syncMessage: errorMessage } : r));
       setLastScan({ text: decodedText, mode: attendanceMode, success: false, message: errorMessage });
     } finally {
         setIsSyncing(false);
-        // Clear the success/error message after a few seconds
         setTimeout(() => setLastScan(null), 4000);
     }
 
@@ -131,15 +123,15 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-50 flex flex-col items-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-4xl mx-auto">
         <header className="text-center mb-8">
-            <div className="flex items-center justify-center gap-3 mb-2">
-                <CameraIcon className="w-10 h-10 text-indigo-500" />
-                <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">
+            <div className="flex flex-col items-center justify-center gap-2 mb-2">
+                <PmShriLogo className="h-12 w-auto" />
+                <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">
                     QR Attendance
                 </h1>
             </div>
-          <p className="text-slate-500 dark:text-slate-400">
-            Scan QR codes to sync attendance with the school management system.
-          </p>
+            <p className="text-slate-500 dark:text-slate-400">
+                For PM SHRI Schools, integrated with WP School Management.
+            </p>
         </header>
 
         <main className="flex flex-col lg:flex-row gap-8 items-start">
@@ -181,7 +173,6 @@ const App: React.FC = () => {
                         </div>
                     )}
                 </div>
-
             </div>
             <div className="w-full lg:w-1/2">
                 <AttendanceLog records={records} />
@@ -191,5 +182,4 @@ const App: React.FC = () => {
     </div>
   );
 };
-
 export default App;

@@ -1,5 +1,7 @@
 {
-  "requestFramePermissions": [],
-  "name": "",
-  "description": ""
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "name": "QR Code Attendance System for PM SHRI",
+  "description": "A WordPress plugin to take attendance using QR codes."
 }

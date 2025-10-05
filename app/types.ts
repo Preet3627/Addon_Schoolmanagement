@@ -12,6 +12,6 @@ export interface AttendanceRecord {
   mode: AttendanceMode;
   timestamp: Date;
   syncStatus: SyncStatus;
-  syncMessage?: string; // Message from the sync process (e.g., error details)
-  attendanceStatus?: AttendanceStatus; // Status from the server (e.g., 'Late')
+  syncMessage?: string;
+  attendanceStatus?: AttendanceStatus;
 }

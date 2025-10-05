@@ -1,6 +1,16 @@
-
 import React from 'react';
 
+export const PmShriLogo: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg" aria-label="PM SHRI Logo">
+      <style>
+        {`.pm-text { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 32px; letter-spacing: -1px; }`}
+      </style>
+      <text x="0" y="30" className="pm-text" fill="#00509E">PM</text>
+      <text x="52" y="30" className="pm-text" fill="#FF9933">SHRI</text>
+    </svg>
+  );
+
+// Main App Icons
 export const CameraIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>

@@ -46,7 +46,7 @@ const AttendanceStatusBadge: React.FC<{ status?: AttendanceStatus }> = ({ status
             colorClasses = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
             break;
         case 'Late':
-            colorClasses = "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300";
+            colorClasses = "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300";
             break;
         case 'Present':
         default:
@@ -62,7 +62,6 @@ const AttendanceStatusBadge: React.FC<{ status?: AttendanceStatus }> = ({ status
 };
 
 const AttendanceLog: React.FC<AttendanceLogProps> = ({ records }) => {
-  // A helper to parse the ID from the QR JSON, falls back to the raw text
   const parseId = (qrText: string): string => {
     try {
       const data = JSON.parse(qrText);
@@ -75,14 +74,14 @@ const AttendanceLog: React.FC<AttendanceLogProps> = ({ records }) => {
   return (
     <div className="w-full mt-8 lg:mt-0">
       <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 text-center">Attendance Log</h2>
-      <div className="bg-white dark:bg-slate-800 shadow-lg rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 shadow-lg rounded-lg overflow-hidden">
         <div className="max-h-[28rem] overflow-y-auto">
           {records.length === 0 ? (
             <p className="text-center text-slate-500 dark:text-slate-400 p-8">No attendance records yet. Start scanning!</p>
           ) : (
             <ul className="divide-y divide-slate-200 dark:divide-slate-700">
               {records.map((record) => (
-                <li key={record.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-150">
+                <li key={record.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150">
                   <div className="flex items-center flex-1 min-w-0">
                     <span className={`mr-4 p-2 rounded-full self-start ${record.mode === AttendanceMode.Student ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400' : 'bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400'}`}>
                       {record.mode === AttendanceMode.Student ? <StudentIcon className="w-5 h-5" /> : <TeacherIcon className="w-5 h-5" />}
