@@ -13,7 +13,7 @@
 /**
  * Plugin Name:       School Management System - QR Attendance
  * Description:       A seamless QR code attendance solution for PM SHRI Schools, fully integrated with the School Management System plugin by Mojoomla.
- * Version:           2.0.7
+ * Version:           3.1.0
  * Author:            AI Assistant
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -21,6 +21,8 @@
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
+
+// --- Core Plugin Hooks ---
 
 add_action( 'plugins_loaded', 'smgt_qr_attendance_init' );
 
@@ -42,17 +44,13 @@ function smgt_qr_attendance_init() {
 function smgt_qr_attendance_dependency_notice() {
     ?>
     <div class="notice notice-error is-dismissible">
-        <p>
-            <?php
-            echo wp_kses_post(
-                sprintf(
-                    __( 'The <strong>%1$s</strong> plugin is inactive. It requires the <strong>%2$s</strong> plugin to be installed and activated. Please activate the required plugin to use the QR attendance features.', 'smgt-qr-attendance' ),
-                    'School Management System - QR Attendance',
-                    'School Management System (by Mojoomla)'
-                )
-            );
-            ?>
-        </p>
+        <p><?php
+            echo wp_kses_post( sprintf(
+                __( 'The <strong>%1$s</strong> plugin is inactive. It requires the <strong>%2$s</strong> plugin to be installed and activated. Please activate the required plugin to use the QR attendance features.', 'smgt-qr-attendance' ),
+                'School Management System - QR Attendance',
+                'School Management System (by Mojoomla)'
+            ));
+        ?></p>
     </div>
     <?php
 }
@@ -66,8 +64,478 @@ function smgt_qr_attendance_load_features() {
     add_action('admin_init', 'smgt_qr_handle_download_trigger');
 }
 
+// --- Admin Menu and Pages ---
+
+function smgt_qr_add_admin_menu_pages() {
+    add_submenu_page( 'smgt_school', 'Scan Attendance', 'Scan Attendance', 'manage_options', 'smgt-scan-attendance', 'smgt_qr_scanner_page_render' );
+    add_submenu_page( 'smgt_school', 'Bulk Print ID Cards', 'Bulk Print ID Cards', 'manage_options', 'smgt_qr_bulk_print_page_render' );
+}
+
+function smgt_qr_scanner_page_render() {
+    smgt_qr_render_scanner_ui_styles();
+    ?>
+    <div class="wrap smgt-qr-attendance-page">
+        <h1><?php esc_html_e( 'QR Attendance Scanner', 'smgt-qr-attendance' ); ?></h1>
+        <p class="smgt-qr-subtitle">Scan student or teacher QR codes to mark attendance for today.</p>
+
+        <main class="smgt-qr-main-content">
+            <!-- Left Column: Scanner -->
+            <div class="smgt-qr-card smgt-qr-scanner-card">
+                <h2 class="smgt-qr-card-title">Live Camera Feed</h2>
+                <?php if (current_user_can('manage_options')): ?>
+                <div class="smgt-qr-mode-switcher">
+                    <button id="student-mode-btn" class="mode-button active">
+                        <?php smgt_qr_icon_student('w-5 h-5 mr-2'); ?> Student
+                    </button>
+                     <button id="teacher-mode-btn" class="mode-button">
+                        <?php smgt_qr_icon_teacher('w-5 h-5 mr-2'); ?> Teacher
+                    </button>
+                </div>
+                <?php else: ?>
+                 <div class="smgt-qr-mode-display">
+                    <h2 class="font-semibold flex items-center justify-center text-base">
+                      <?php smgt_qr_icon_student('w-5 h-5 mr-2'); ?>
+                      Scanning Student Attendance
+                    </h2>
+                  </div>
+                <?php endif; ?>
+                
+                <div class="smgt-qr-scanner-viewport">
+                   <div id="qr-reader"></div>
+                   <div id="scanner-overlay" class="smgt-qr-scanner-overlay" style="display: none;">
+                        <svg class="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="mt-3 text-lg font-semibold">Syncing...</span>
+                     </div>
+                </div>
+
+                <div id="scan-status-container" class="h-20 mt-4 w-full"></div>
+            </div>
+            <!-- Right Column: Log -->
+            <div class="smgt-qr-card smgt-qr-log-card">
+                 <h2 class="smgt-qr-card-title">Today's Attendance Log</h2>
+                 <div class="smgt-qr-log-container">
+                    <ul id="attendance-log-list">
+                        <li id="no-records-placeholder" class="smgt-qr-log-placeholder">
+                            <svg class="w-16 h-16 text-slate-300 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                            <p class="font-semibold">No attendance records yet.</p>
+                            <p class="text-sm">Start scanning to see the log.</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+    <?php
+}
+
+function smgt_qr_enqueue_scanner_scripts( $hook ) {
+    $current_screen = get_current_screen();
+    if ( !is_object($current_screen) || 
+        ($current_screen->id !== 'smgt_school_page_smgt-scan-attendance' && $current_screen->id !== 'smgt_school_page_smgt-qr-bulk-print-ids') ) {
+        return;
+    }
+    
+    // Always enqueue styles for consistent UI
+    smgt_qr_render_scanner_ui_styles();
+
+    if ($current_screen->id !== 'smgt_school_page_smgt-scan-attendance') {
+        return;
+    }
+    
+    // Enqueue the html5-qrcode library from CDN
+    wp_enqueue_script( 'html5-qrcode', 'https://aistudiocdn.com/html5-qrcode@^2.3.8', [], '2.3.8', true );
+
+    // Register a dummy handle for our inline script
+    wp_register_script('smgt-qr-attendance-logic', '', ['html5-qrcode'], '3.1.0', true);
+    wp_enqueue_script('smgt-qr-attendance-logic');
+
+    // Pass data to our script
+    wp_localize_script( 'smgt-qr-attendance-logic', 'smgtQrAttendanceData', [
+        'apiUrl'   => rest_url( 'smgt-qr-attendance/v1/log' ),
+        'nonce'    => wp_create_nonce( 'wp_rest' ),
+        'is_admin' => current_user_can( 'manage_options' ),
+    ]);
+    
+    // Add the main scanner logic as an inline script
+    $inline_script = <<<JS
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof Html5QrcodeScanner === 'undefined') {
+            console.error('html5-qrcode library not found!');
+            return;
+        }
+
+        // --- DOM Elements ---
+        const logList = document.getElementById('attendance-log-list');
+        const noRecordsPlaceholder = document.getElementById('no-records-placeholder');
+        const scannerOverlay = document.getElementById('scanner-overlay');
+        const scanStatusContainer = document.getElementById('scan-status-container');
+        const studentModeBtn = document.getElementById('student-mode-btn');
+        const teacherModeBtn = document.getElementById('teacher-mode-btn');
+        let html5QrcodeScanner;
+
+        // --- State ---
+        let attendanceMode = 'Student';
+        let isSyncing = false;
+
+        // --- UI Functions ---
+        const showSyncing = (show) => {
+            isSyncing = show;
+            scannerOverlay.style.display = show ? 'flex' : 'none';
+            if (studentModeBtn) studentModeBtn.disabled = show;
+            if (teacherModeBtn) teacherModeBtn.disabled = show;
+        };
+
+        const updateScanStatus = (success, message) => {
+            const successClass = 'bg-green-100 border-green-400 text-green-800';
+            const errorClass = 'bg-red-100 border-red-400 text-red-800';
+            const icon = success ? '<?php echo smgt_qr_js_escape(smgt_qr_icon_check_circle('w-6 h-6 mr-3 flex-shrink-0 mt-0.5 text-green-500')); ?>' : '<?php echo smgt_qr_js_escape(smgt_qr_icon_error_circle('w-6 h-6 mr-3 flex-shrink-0 mt-0.5 text-red-500')); ?>';
+
+            scanStatusContainer.innerHTML = `
+                <div class="smgt-qr-status-alert ${success ? successClass : errorClass}" role="alert">
+                    <div class="flex items-start">
+                        ${icon}
+                        <div>
+                            <p class="font-bold">${success ? 'Success' : 'Error'}</p>
+                            <p class="text-sm">${message}</p>
+                        </div>
+                    </div>
+                </div>`;
+            setTimeout(() => { scanStatusContainer.innerHTML = ''; }, 4000);
+        };
+
+        const addLogRecord = (record) => {
+            if (noRecordsPlaceholder) noRecordsPlaceholder.style.display = 'none';
+            const li = document.createElement('li');
+            li.id = 'log-' + record.id;
+            li.className = 'smgt-qr-log-item';
+            
+            let idText = record.decodedText;
+            try { idText = JSON.parse(record.decodedText).id || idText; } catch(e){}
+
+            const iconBg = record.mode === 'Student' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600';
+            const modeIcon = record.mode === 'Student' ? '<?php echo smgt_qr_js_escape(smgt_qr_icon_student("w-5 h-5")); ?>' : '<?php echo smgt_qr_js_escape(smgt_qr_icon_teacher("w-5 h-5")); ?>';
+            const syncIcon = '<?php echo smgt_qr_js_escape(smgt_qr_icon_sync("syncing")); ?>';
+
+            li.innerHTML = `
+                <div class="flex items-center flex-1 min-w-0">
+                    <span class="log-item-icon-wrapper ${iconBg}">${modeIcon}</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-slate-800 truncate">${record.mode} ID: ${idText}</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <p class="text-sm text-slate-500">${record.timestamp.toLocaleTimeString()}</p>
+                            <span class="status-badge-container"></span>
+                        </div>
+                        <p class="sync-message-container text-xs mt-1"></p>
+                    </div>
+                </div>
+                <div class="sync-icon-container flex items-center gap-3 ml-4">${syncIcon}</div>`;
+            logList.prepend(li);
+             setTimeout(() => { li.classList.add('visible'); }, 10);
+        };
+        
+        const updateLogRecord = (id, syncStatus, message, attendanceStatus) => {
+            const li = document.getElementById('log-' + id);
+            if (!li) return;
+
+            const syncIconContainer = li.querySelector('.sync-icon-container');
+            const syncMessageContainer = li.querySelector('.sync-message-container');
+            const statusBadgeContainer = li.querySelector('.status-badge-container');
+            
+            if (syncIconContainer) syncIconContainer.innerHTML = '<?php echo smgt_qr_js_escape(smgt_qr_icon_sync("synced")); ?>';
+            if (syncStatus === 'error') {
+                 if (syncIconContainer) syncIconContainer.innerHTML = '<?php echo smgt_qr_js_escape(smgt_qr_icon_sync("error")); ?>';
+                 if (syncMessageContainer) {
+                     syncMessageContainer.textContent = message;
+                     syncMessageContainer.className = 'text-xs mt-1 text-red-600';
+                 }
+            }
+
+            if (attendanceStatus && statusBadgeContainer) {
+                let badgeClass = 'bg-slate-100 text-slate-800';
+                if (attendanceStatus === 'On Time') badgeClass = 'bg-green-100 text-green-800';
+                if (attendanceStatus === 'Late') badgeClass = 'bg-orange-100 text-orange-800';
+                statusBadgeContainer.innerHTML = \`<span class="text-xs font-medium px-2.5 py-0.5 rounded-full \${badgeClass}">\${attendanceStatus}</span>\`;
+            }
+        };
+
+        // --- Mode Switch Logic ---
+        if (smgtQrAttendanceData.is_admin) {
+            const switchMode = (newMode, btnToActivate) => {
+                if(isSyncing) return;
+                attendanceMode = newMode;
+                studentModeBtn.classList.toggle('active', newMode === 'Student');
+                teacherModeBtn.classList.toggle('active', newMode === 'Teacher');
+            };
+            studentModeBtn.addEventListener('click', () => switchMode('Student'));
+            teacherModeBtn.addEventListener('click', () => switchMode('Teacher'));
+        }
+
+        // --- Scan Callbacks ---
+        const onScanSuccess = async (decodedText) => {
+            if (isSyncing) return;
+
+            const now = new Date();
+            const tempId = `\${decodedText}-\${now.toISOString()}`;
+            
+            let effectiveMode = smgtQrAttendanceData.is_admin ? attendanceMode : 'Student';
+            try {
+                const qrData = JSON.parse(decodedText);
+                if (smgtQrAttendanceData.is_admin && qrData.mode && (qrData.mode === 'Student' || qrData.mode === 'Teacher')) {
+                    effectiveMode = qrData.mode;
+                }
+            } catch (e) {}
+
+            const newRecord = { id: tempId, decodedText, mode: effectiveMode, timestamp: now, syncStatus: 'syncing' };
+            addLogRecord(newRecord);
+            showSyncing(true);
+
+            try {
+                const response = await fetch(smgtQrAttendanceData.apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': smgtQrAttendanceData.nonce },
+                    body: JSON.stringify({ qrData: decodedText, mode: effectiveMode }),
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'An unknown error occurred.');
+
+                updateLogRecord(tempId, 'synced', result.message, result.attendanceStatus);
+                updateScanStatus(true, result.message || "Success!");
+
+            } catch (error) {
+                const errorMessage = error.message || 'Failed to connect to server.';
+                updateLogRecord(tempId, 'error', errorMessage);
+                updateScanStatus(false, errorMessage);
+            } finally {
+                showSyncing(false);
+                if (html5QrcodeScanner && html5QrcodeScanner.getState() === 2) { // Is PAUSED
+                    setTimeout(() => { if(html5QrcodeScanner.getState() === 2) html5QrcodeScanner.resume(); }, 3000);
+                }
+            }
+        };
+
+        const onScanFailure = (error) => { /* Ignored */ };
+        
+        const successCallback = (decodedText, decodedResult) => {
+            if (html5QrcodeScanner.getState() === 2) return; // PAUSED
+            html5QrcodeScanner.pause();
+            onScanSuccess(decodedText, decodedResult);
+        };
+
+        html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 },
+            rememberLastUsedCamera: true,
+            supportedScanTypes: [0] // Camera
+        }, false);
+        html5QrcodeScanner.render(successCallback, onScanFailure);
+    });
+JS;
+    wp_add_inline_script( 'smgt-qr-attendance-logic', $inline_script );
+}
+
+// --- REST API Endpoint ---
+
+function smgt_qr_register_rest_api() {
+    register_rest_route( 'smgt-qr-attendance/v1', '/log', [
+        'methods'  => 'POST',
+        'callback' => 'smgt_qr_log_attendance_callback',
+        'permission_callback' => fn() => current_user_can( 'edit_posts' )
+    ]);
+}
+
+function smgt_qr_log_attendance_callback( WP_REST_Request $request ) {
+    global $wpdb;
+    $params = $request->get_json_params();
+    $qr_data_string = sanitize_text_field( $params['qrData'] ?? '' );
+    if ( empty($qr_data_string) ) return new WP_Error( 'bad_request', 'Missing QR data.', ['status' => 400] );
+    
+    $qr_data = json_decode( html_entity_decode( $qr_data_string ), true );
+    if ( !is_array($qr_data) || !isset($qr_data['id']) ) return new WP_Error( 'invalid_qr', 'Invalid QR format.', ['status' => 400] );
+    
+    $user_id = absint( $qr_data['id'] );
+    $user = get_userdata($user_id);
+    if (!$user) return new WP_Error( 'user_not_found', "User with ID {$user_id} not found.", ['status' => 404] );
+
+    $user_roles = $user->roles;
+    $user_role = array_shift($user_roles);
+    $current_date = date('Y-m-d');
+    $attend_by = get_current_user_id();
+    $result = false;
+
+    if ($user_role == 'student') {
+        $table = $wpdb->prefix . 'smgt_sub_attendance';
+        $existing = $wpdb->get_var( $wpdb->prepare( "SELECT attendance_id FROM $table WHERE user_id = %d AND attendance_date = %s AND categories = 'class'", $user_id, $current_date ) );
+        
+        if ($existing) {
+            return new WP_REST_Response( [ 'success' => true, 'message' => "Attendance for student {$user->display_name} already marked for today.", 'attendanceStatus' => 'Present' ], 200 );
+        }
+
+        $class_id = get_user_meta( $user_id, 'class_name', true );
+        $section_id = get_user_meta( $user_id, 'class_section', true );
+
+        $result = $wpdb->insert( $table, [
+            'user_id' => $user_id, 'class_id' => $class_id ? absint($class_id) : 0, 'section_id' => $section_id ? absint($section_id) : 0,
+            'attend_by' => $attend_by, 'attendance_date' => $current_date, 'status' => 'Present', 'role_name' => 'student',
+            'categories' => 'class', 'comment' => 'Marked via QR Scan'
+        ]);
+    } elseif ($user_role == 'teacher') {
+        $table = $wpdb->prefix . 'attendence';
+        $existing = $wpdb->get_var( $wpdb->prepare( "SELECT attendence_id FROM $table WHERE user_id = %d AND attendence_date = %s AND role_name = 'teacher'", $user_id, $current_date ) );
+
+        if ($existing) {
+            return new WP_REST_Response( [ 'success' => true, 'message' => "Attendance for teacher {$user->display_name} already marked for today.", 'attendanceStatus' => 'Present' ], 200 );
+        }
+        
+        $result = $wpdb->insert( $table, [
+            'user_id' => $user_id, 'class_id' => 0, 'attend_by' => $attend_by, 'attendence_date' => $current_date,
+            'status' => 'Present', 'role_name' => 'teacher', 'comment' => 'Marked via QR Scan'
+        ]);
+    } else {
+        return new WP_Error( 'invalid_role', 'QR Scan is only for students and teachers.', ['status' => 400] );
+    }
+
+    if ( $result === false ) return new WP_Error( 'db_error', 'Could not save attendance.', ['status' => 500] );
+
+    return new WP_REST_Response( [ 'success' => true, 'message' => "Attendance marked for {$user->display_name}.", 'attendanceStatus' => 'On Time' ], 200 );
+}
+
+// --- ID Card Bulk Print Page ---
+
+function smgt_qr_bulk_print_page_render() {
+    global $wpdb;
+    ?>
+    <div class="wrap smgt-qr-attendance-page">
+        <h1>Bulk Print Student ID Cards</h1>
+        <div class="smgt-qr-card" style="margin-top: 2rem;">
+            <h2 class="smgt-qr-card-title">Select Class</h2>
+            <p>Select a class to generate printable ID cards for all students.</p>
+            <form method="POST" class="smgt-qr-print-form">
+                <?php
+                $class_table = $wpdb->prefix . 'smgt_class';
+                $classes = $wpdb->get_results("SELECT class_id, class_name FROM $class_table"); 
+                ?>
+                <label for="smgt_class_select" style="margin-right: 10px; font-weight: 600;">Class:</label>
+                <select name="smgt_class_select" id="smgt_class_select">
+                    <option value="">-- Select a Class --</option>
+                    <?php foreach ($classes as $class) : ?>
+                        <option value="<?php echo esc_attr($class->class_id); ?>" <?php selected(isset($_POST['smgt_class_select']) ? (int) $_POST['smgt_class_select'] : 0, $class->class_id); ?>>
+                            <?php echo esc_html($class->class_name); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <input type="submit" name="generate_id_cards" class="button button-primary" value="Generate" style="margin-left: 10px;">
+            </form>
+        </div>
+
+        <div class="smgt-qr-card" style="margin-top: 2rem;">
+            <h2 class="smgt-qr-card-title">Plugin Management</h2>
+            <p>Download the full source code for this plugin as a .zip file. This is useful for backups or manual installations.</p>
+            <?php
+            $download_nonce = wp_create_nonce('download_plugin_source');
+            $download_url = admin_url('admin.php?page=smgt-qr-bulk-print-ids&download_source=true&_wpnonce=' . $download_nonce);
+            ?>
+            <p><a href="<?php echo esc_url($download_url); ?>" class="button button-secondary">
+                <span class="dashicons dashicons-download" style="vertical-align: text-bottom; margin-right: 5px;"></span>
+                Download Plugin Source (.zip)
+            </a></p>
+        </div>
+        
+        <?php if ( isset($_POST['generate_id_cards']) && !empty($_POST['smgt_class_select']) ) : ?>
+        <hr style="margin: 2rem 0;"/>
+        <div class="smgt-qr-id-cards-container">
+            <?php
+                $selected_class_id = absint($_POST['smgt_class_select']);
+                $class_name = $wpdb->get_var($wpdb->prepare("SELECT class_name FROM $class_table WHERE class_id=%d", $selected_class_id));
+                echo "<h2>ID Cards for " . esc_html($class_name) . "</h2>";
+                echo '<p>Use your browser\'s print function (Ctrl/Cmd + P) to print these cards.</p>';
+                
+                $students = get_users( ['role' => 'student', 'meta_key' => 'class_name', 'meta_value' => $selected_class_id] );
+                
+                if (empty($students)) {
+                    echo '<p>No students found for this class.</p>';
+                } else {
+                    foreach ($students as $student) {
+                        smgt_qr_render_single_id_card($student);
+                    }
+                }
+            ?>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php
+    smgt_qr_id_card_styles();
+}
+
+
+// --- ID Card Functionality ---
+
+function smgt_qr_display_id_card_section( $user ) {
+    if ( !in_array('student', $user->roles) && !in_array('teacher', $user->roles) ) return;
+    ?>
+    <h3>QR Attendance ID Card</h3>
+    <table class="form-table"><tr><th><label>ID Card</label></th><td>
+    <?php smgt_qr_render_single_id_card($user); ?>
+    <p class="description">Use the browser's print function (Ctrl/Cmd+P) to print this ID card.</p>
+    </td></tr></table>
+    <?php
+    smgt_qr_id_card_styles();
+}
+
+function smgt_qr_render_single_id_card( $user ) {
+    $user_id = $user->ID;
+    $user_roles = $user->roles;
+    $user_role = array_shift($user_roles);
+
+    $qr_data_raw = ['id' => $user_id, 'name' => $user->display_name, 'mode' => ucfirst($user_role)];
+    $qr_data_filtered = apply_filters('smgt_qr_attendance_data', $qr_data_raw, $user_id);
+    $qr_data = json_encode($qr_data_filtered);
+
+    $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qr_data);
+    
+    $dob = get_user_meta( $user_id, 'smgt_bdate', true ) ?: 'N/A';
+    $mobile = get_user_meta( $user_id, 'mobile', true ) ?: 'N/A';
+    $photo_url = get_user_meta( $user_id, 'smgt_user_avatar', true );
+    if ( empty($photo_url) ) {
+        $photo_url = get_avatar_url( $user_id, ['size' => 150] );
+    }
+    ?>
+    <div class="smgt-id-card">
+        <div class="id-card-header">
+             <?php echo smgt_qr_icon_pm_shri_logo('id-card-logo'); ?>
+            <div class="id-card-school-name">
+                <span>PM SHRI PRATHMIK</span>
+                <span>VIDHYAMANDIR PONSRI</span>
+            </div>
+        </div>
+        <div class="id-card-body">
+            <div class="id-card-left">
+                <div class="id-card-photo">
+                    <img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( $user->display_name ); ?>">
+                </div>
+                <div class="id-card-name"><?php echo esc_html( $user->display_name ); ?></div>
+                <div class="id-card-role"><?php echo esc_html( ucfirst($user_role) ); ?></div>
+            </div>
+            <div class="id-card-right">
+                <div class="id-card-details">
+                    <div><strong>DOB:</strong> <?php echo esc_html( $dob ); ?></div>
+                    <div><strong>Mobile:</strong> <?php echo esc_html( $mobile ); ?></div>
+                </div>
+                <div class="id-card-qr">
+                    <img src="<?php echo esc_url($qr_code_url); ?>" alt="QR Code">
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+
+// --- Plugin Download Functionality ---
+
 function smgt_qr_handle_download_trigger() {
-    if (isset($_GET['page']) && $_GET['page'] === 'smgt-bulk-print-ids' && isset($_GET['download_source'])) {
+    if (isset($_GET['page']) && $_GET['page'] === 'smgt-qr-bulk-print-ids' && isset($_GET['download_source'])) {
         if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_key($_GET['_wpnonce']), 'download_plugin_source' ) ) {
             wp_die('Security check failed!');
         }
@@ -116,282 +584,120 @@ function smgt_qr_zip_and_download_plugin() {
         header('Pragma: no-cache');
         header('Expires: 0');
         readfile($zip_file_path);
-        unlink($zip_file_path); // Clean up the temp file
+        unlink($zip_file_path);
         exit;
     } else {
         wp_die("Could not create the zip file.");
     }
 }
 
-
-function smgt_qr_add_admin_menu_pages() {
-    add_submenu_page( 'smgt_school', 'Scan Attendance', 'Scan Attendance', 'manage_options', 'smgt-scan-attendance', 'smgt_qr_scanner_page_render' );
-    add_submenu_page( 'smgt_school', 'Bulk Print ID Cards', 'Bulk Print ID Cards', 'manage_options', 'smgt-bulk-print-ids', 'smgt_qr_bulk_print_page_render' );
-}
-
-function smgt_qr_scanner_page_render() {
-    echo '<div class="wrap"><h1>Scan QR Code Attendance</h1><div id="smgt-qr-attendance-app"></div></div>';
-}
-
-function smgt_qr_enqueue_scanner_scripts( $hook ) {
-    $current_screen = get_current_screen();
-    
-    $scanner_screen_id = 'smgt_school_page_smgt-scan-attendance';
-
-    if ( !is_object($current_screen) || $current_screen->id !== $scanner_screen_id ) {
-        return;
-    }
-    
-    $script_url = plugins_url( 'index.tsx', __FILE__ );
-    
-    wp_enqueue_script( 'smgt-qr-attendance-app', $script_url, ['wp-element'], '2.0.7', true );
-    wp_localize_script( 'smgt-qr-attendance-app', 'smgtQrAttendanceData', [
-        'apiUrl'   => rest_url( 'smgt-qr-attendance/v1/log' ),
-        'nonce'    => wp_create_nonce( 'wp_rest' ),
-        'is_admin' => current_user_can( 'manage_options' ),
-    ]);
-}
-
-function smgt_qr_register_rest_api() {
-    register_rest_route( 'smgt-qr-attendance/v1', '/log', [
-        'methods'  => 'POST',
-        'callback' => 'smgt_qr_log_attendance_callback',
-        'permission_callback' => fn() => current_user_can( 'edit_posts' )
-    ]);
-}
-
-function smgt_qr_log_attendance_callback( WP_REST_Request $request ) {
-    global $wpdb;
-    $params = $request->get_json_params();
-    $qr_data_string = sanitize_text_field( $params['qrData'] ?? '' );
-    if ( empty($qr_data_string) ) return new WP_Error( 'bad_request', 'Missing QR data.', ['status' => 400] );
-    
-    $qr_data = json_decode( html_entity_decode( $qr_data_string ), true );
-    if ( !is_array($qr_data) || !isset($qr_data['id']) ) return new WP_Error( 'invalid_qr', 'Invalid QR format.', ['status' => 400] );
-    
-    $user_id = absint( $qr_data['id'] );
-    $user = get_userdata($user_id);
-    if (!$user) return new WP_Error( 'user_not_found', "User with ID {$user_id} not found.", ['status' => 404] );
-
-    $user_roles = $user->roles;
-    $user_role = array_shift($user_roles);
-    $current_date = date('Y-m-d');
-    $attend_by = get_current_user_id();
-    $result = false;
-
-    if ($user_role == 'student') {
-        $table = $wpdb->prefix . 'smgt_sub_attendance';
-        $existing = $wpdb->get_var( $wpdb->prepare( "SELECT attendance_id FROM $table WHERE user_id = %d AND attendance_date = %s AND categories = 'class'", $user_id, $current_date ) );
-        
-        if ($existing) {
-            return new WP_REST_Response( [ 'success' => true, 'message' => "Attendance for student {$user->display_name} already marked for today.", 'attendanceStatus' => 'Present' ], 200 );
-        }
-
-        $class_id = get_user_meta( $user_id, 'class_name', true );
-        $section_id = get_user_meta( $user_id, 'class_section', true );
-
-        $result = $wpdb->insert( $table, [
-            'user_id' => $user_id, 
-            'class_id' => $class_id ? absint($class_id) : 0, 
-            'section_id' => $section_id ? absint($section_id) : 0,
-            'attend_by' => $attend_by,
-            'attendance_date' => $current_date,
-            'status' => 'Present', 
-            'role_name' => 'student',
-            'categories' => 'class',
-            'comment' => 'Marked via QR Scan'
-        ]);
-    } elseif ($user_role == 'teacher') {
-        $table = $wpdb->prefix . 'attendence';
-        $existing = $wpdb->get_var( $wpdb->prepare( "SELECT attendence_id FROM $table WHERE user_id = %d AND attendence_date = %s AND role_name = 'teacher'", $user_id, $current_date ) );
-
-        if ($existing) {
-            return new WP_REST_Response( [ 'success' => true, 'message' => "Attendance for teacher {$user->display_name} already marked for today.", 'attendanceStatus' => 'Present' ], 200 );
-        }
-        
-        $result = $wpdb->insert( $table, [
-            'user_id' => $user_id, 
-            'class_id' => 0,
-            'attend_by' => $attend_by,
-            'attendence_date' => $current_date,
-            'status' => 'Present', 
-            'role_name' => 'teacher',
-            'comment' => 'Marked via QR Scan'
-        ]);
-    } else {
-        return new WP_Error( 'invalid_role', 'QR Scan is only for students and teachers.', ['status' => 400] );
-    }
-
-    if ( $result === false ) return new WP_Error( 'db_error', 'Could not save attendance.', ['status' => 500] );
-
-    return new WP_REST_Response( [ 'success' => true, 'message' => "Attendance marked for {$user->display_name}.", 'attendanceStatus' => 'On Time' ], 200 );
-}
-
-
-function smgt_qr_display_id_card_section( $user ) {
-    if ( !in_array('student', $user->roles) && !in_array('teacher', $user->roles) ) return;
-    ?>
-    <h3>QR Attendance ID Card</h3>
-    <table class="form-table"><tr><th><label>ID Card</label></th><td>
-    <?php smgt_qr_render_single_id_card($user); ?>
-    <p class="description">Use the browser's print function (Ctrl/Cmd+P) to print this ID card.</p>
-    </td></tr></table>
-    <?php
-}
-
-function smgt_qr_bulk_print_page_render() {
-    global $wpdb;
-    ?>
-    <div class="wrap">
-        <h1>Bulk Print Student ID Cards</h1>
-
-        <div style="margin-bottom: 20px; padding: 1px 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 4px;">
-            <h3>Plugin Management</h3>
-            <p>Download the full source code for this plugin as a .zip file. This is useful for backups or manual installations.</p>
-            <?php
-            $download_nonce = wp_create_nonce('download_plugin_source');
-            $download_url = admin_url('admin.php?page=smgt-bulk-print-ids&download_source=true&_wpnonce=' . $download_nonce);
-            ?>
-            <p><a href="<?php echo esc_url($download_url); ?>" class="button button-secondary">
-                <span class="dashicons dashicons-download" style="vertical-align: text-bottom; margin-right: 5px;"></span>
-                Download Plugin Source (.zip)
-            </a></p>
-        </div>
-
-        <p>Select a class to generate printable ID cards for all students.</p>
-        <form method="POST" class="smgt-qr-print-form">
-            <?php
-            $class_table = $wpdb->prefix . 'smgt_class';
-            $classes = $wpdb->get_results("SELECT class_id, class_name FROM $class_table"); 
-            ?>
-            <label for="smgt_class_select">Select Class:</label>
-            <select name="smgt_class_select" id="smgt_class_select">
-                <option value="">-- Select a Class --</option>
-                <?php foreach ($classes as $class) : ?>
-                    <option value="<?php echo esc_attr($class->class_id); ?>" <?php selected(isset($_POST['smgt_class_select']) ? (int) $_POST['smgt_class_select'] : 0, $class->class_id); ?>>
-                        <?php echo esc_html($class->class_name); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <input type="submit" name="generate_id_cards" class="button button-primary" value="Generate">
-        </form>
-        <hr/>
-        <div class="smgt-qr-id-cards-container">
-            <?php
-            if ( isset($_POST['generate_id_cards']) && !empty($_POST['smgt_class_select']) ) {
-                $selected_class_id = absint($_POST['smgt_class_select']);
-                $class_name = $wpdb->get_var($wpdb->prepare("SELECT class_name FROM $class_table WHERE class_id=%d", $selected_class_id));
-                echo "<h2>ID Cards for " . esc_html($class_name) . "</h2>";
-                echo '<p>Use your browser\'s print function (Ctrl/Cmd + P) to print these cards.</p>';
-                
-                $students = get_users( ['role' => 'student', 'meta_key' => 'class_name', 'meta_value' => $selected_class_id] );
-                
-                if (empty($students)) {
-                    echo '<p>No students found for this class.</p>';
-                } else {
-                    foreach ($students as $student) {
-                        smgt_qr_render_single_id_card($student);
-                    }
-                }
-            }
-            ?>
-        </div>
-    </div>
-    <?php
-    smgt_qr_id_card_styles(); // Inject CSS
-}
-
-function smgt_qr_render_single_id_card( $user ) {
-    $user_id = $user->ID;
-    $qr_data_raw = ['id' => $user_id, 'name' => $user->display_name];
-    $qr_data_filtered = apply_filters('smgt_qr_attendance_data', $qr_data_raw, $user_id);
-    $qr_data = json_encode($qr_data_filtered);
-
-    $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&amp;data=' . urlencode($qr_data);
-    $school_logo_url = 'https://ponsrischool.in/wp-content/uploads/2025/03/cropped-download.png';
-    
-    $dob = get_user_meta( $user_id, 'smgt_bdate', true ) ?: 'N/A';
-    $mobile = get_user_meta( $user_id, 'mobile', true ) ?: 'N/A';
-    $photo_url = get_user_meta( $user_id, 'smgt_user_avatar', true );
-    if ( empty($photo_url) ) {
-        $photo_url = get_avatar_url( $user_id, ['size' => 150] );
-    }
-    ?>
-    <div class="smgt-id-card">
-        <div class="id-card-header">
-            <img src="<?php echo esc_url($school_logo_url); ?>" alt="School Logo">
-            <span>PM SHRI PRATHMIK<br>VIDHYAMANDIR PONSRI</span>
-        </div>
-        <div class="id-card-body">
-            <div class="id-card-photo">
-                <img src="<?php echo esc_url( $photo_url ); ?>" alt="<?php echo esc_attr( $user->display_name ); ?>">
-            </div>
-            <div class="id-card-info">
-                <div class="id-card-name"><?php echo esc_html( $user->display_name ); ?></div>
-                <div class="id-card-details">
-                    <strong>DOB:</strong> <?php echo esc_html( $dob ); ?><br>
-                    <strong>Mobile:</strong> <?php echo esc_html( $mobile ); ?>
-                </div>
-            </div>
-            <div class="id-card-qr">
-                <img src="<?php echo esc_url($qr_code_url); ?>" alt="QR Code">
-            </div>
-        </div>
-    </div>
-    <?php
-}
+// --- STYLES AND ICONS ---
 
 function smgt_qr_id_card_styles() {
     ?>
     <style type="text/css">
-        .smgt-id-card {
-            width: 320px;
-            height: 200px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            font-family: sans-serif;
-            display: inline-block;
-            margin: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            page-break-inside: avoid;
-        }
-        .id-card-header { 
-            background-color: #3c8dbc; 
-            color: white; 
-            font-weight: bold; 
-            padding: 8px 10px; 
-            font-size: 10px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            line-height: 1.2; 
-            text-align: left;
-        }
-        .id-card-header img {
-            height: 30px;
-            width: 30px;
-        }
-        .id-card-header span {
-            flex-grow: 1;
-        }
-        .id-card-body { display: flex; padding: 10px; align-items: center; }
-        .id-card-photo { flex-shrink: 0; margin-right: 10px; }
-        .id-card-photo img { width: 80px; height: 80px; border-radius: 5px; border: 2px solid #ddd; object-fit: cover; }
-        .id-card-info { flex-grow: 1; }
-        .id-card-name { font-size: 16px; font-weight: bold; color: #333; }
-        .id-card-details { font-size: 12px; color: #555; margin-top: 5px; line-height: 1.4; }
-        .id-card-qr { flex-shrink: 0; }
-        .id-card-qr img { width: 80px; height: 80px; }
-
-        @media print {
-            body { background-color: white; }
-            .smgt-qr-print-form, .wrap > h1, .wrap > p, .wrap > hr, .wrap > h2, .wrap > div[style*="margin-bottom"] { display: none; }
-            .smgt-qr-id-cards-container { margin-top: 0; }
-            #wpadminbar, #adminmenumain, #wpfooter { display: none !important; }
-            #wpcontent { margin-left: 0 !important; padding-top: 0 !important; }
-            .smgt-id-card { box-shadow: none; border: 1px solid #000; }
-        }
+    .smgt-id-card{width:330px;height:210px;border:1px solid #ddd;border-radius:12px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,'Open Sans','Helvetica Neue',sans-serif;display:inline-block;margin:10px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);page-break-inside:avoid;background:#fff}.id-card-header{background:#f1f5f9;color:#1e293b;padding:8px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0}.id-card-header .id-card-logo{height:32px;width:32px}.id-card-school-name{font-weight:600;font-size:10px;line-height:1.2;color:#0f172a}.id-card-school-name span{display:block}.id-card-body{display:flex;padding:12px;align-items:center;gap:12px}.id-card-left{text-align:center;width:100px;flex-shrink:0}.id-card-photo{width:80px;height:80px;border-radius:8px;overflow:hidden;margin:0 auto;border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.1)}.id-card-photo img{width:100%;height:100%;object-fit:cover}.id-card-name{font-size:14px;font-weight:700;color:#0f172a;margin-top:8px;line-height:1.2}.id-card-role{font-size:11px;font-weight:500;color:#483D8B;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}.id-card-right{flex-grow:1;display:flex;flex-direction:column;justify-content:space-between;height:140px}.id-card-details{font-size:11px;color:#334155;line-height:1.6}.id-card-details strong{font-weight:600;color:#1e293b;margin-right:4px}.id-card-qr{margin-top:auto;text-align:center}.id-card-qr img{width:75px;height:75px;display:block;margin:0 auto}
+    @media print{body{background-color:#fff}.smgt-qr-print-form,.wrap>h1,.wrap>p,.wrap>hr,.wrap>h2,.wrap>div[style*=margin-bottom]{display:none}.smgt-qr-id-cards-container{margin-top:0}#wpadminbar,#adminmenumain,#wpfooter{display:none!important}#wpcontent{margin-left:0!important;padding-top:0!important}.smgt-id-card{box-shadow:none;border:1px solid #999}}
     </style>
     <?php
 }
+
+function smgt_qr_render_scanner_ui_styles() {
+    ?>
+    <style type="text/css">
+    :root { --smgt-brand-primary: #483D8B; --smgt-brand-secondary: #FF9933; --smgt-bg-light: #f7f9fc; --smgt-text-primary: #1e293b; --smgt-text-secondary: #64748b; --smgt-border-color: #e2e8f0; --smgt-card-shadow: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05); }
+    .smgt-qr-attendance-page{ background-color: transparent; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .smgt-qr-subtitle{ font-size: 1rem; color: var(--smgt-text-secondary); margin: -0.5rem 0 1.5rem 0; }
+    .smgt-qr-main-content{ display: grid; grid-template-columns: 1fr; gap: 2rem; }
+    @media (min-width: 1024px){ .smgt-qr-main-content{ grid-template-columns: repeat(2, 1fr); } }
+    .smgt-qr-card{ background-color: #fff; border-radius: 0.75rem; box-shadow: var(--smgt-card-shadow); border: 1px solid var(--smgt-border-color); padding: 1.5rem; }
+    .smgt-qr-card-title{ font-size: 1.125rem; font-weight: 600; color: var(--smgt-text-primary); margin: 0 0 1.5rem 0; padding-bottom: 1rem; border-bottom: 1px solid var(--smgt-border-color); text-align: left; }
+    .smgt-qr-scanner-card { display: flex; flex-direction: column; align-items: stretch; }
+    .smgt-qr-mode-switcher{ display: flex; border-bottom: 1px solid var(--smgt-border-color); margin-bottom: 1.5rem; background-color: transparent; padding: 0; }
+    .smgt-qr-mode-display{ padding: 0.75rem; background-color: #f8fafc; border-radius: 0.5rem; margin-bottom: 1.5rem; width:100%; text-align:center; color: var(--smgt-text-primary); border: 1px solid var(--smgt-border-color); }
+    .mode-button{ display:flex; align-items:center; justify-content:center; flex-grow: 1; padding: 0.75rem 0.5rem; font-size: 0.875rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s ease-in-out; background-color: transparent; color: var(--smgt-text-secondary); border-bottom: 3px solid transparent; margin-bottom: -1px; }
+    .mode-button:hover:not(.active){ color: var(--smgt-text-primary); }
+    .mode-button.active{ color: var(--smgt-brand-primary); border-bottom-color: var(--smgt-brand-primary); box-shadow: none; }
+    .mode-button:disabled{ opacity: 0.6; cursor: not-allowed; }
+    .smgt-qr-scanner-viewport{ width: 100%; max-width: 24rem; aspect-ratio: 1/1; background-color: #f1f5f9; border-radius: 0.75rem; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; border: 1px solid var(--smgt-border-color); margin: 0 auto; }
+    #qr-reader{ width: 100%; border: none; }
+    #qr-reader video{ transform: scaleX(-1); }
+    .smgt-qr-scanner-overlay{ position: absolute; inset: 0; background-color: rgba(255,255,255,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; backdrop-filter: blur(4px); }
+    .smgt-qr-log-container{ max-height: 28rem; overflow-y: auto; }
+    #attendance-log-list { list-style: none; margin: 0; padding: 0; divide-y: 1px solid var(--smgt-border-color); }
+    .smgt-qr-log-placeholder{ text-align: center; color: var(--smgt-text-secondary); padding: 2rem; display: flex; flex-direction: column; align-items: center; }
+    .smgt-qr-log-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background-color: #fff; transition: background-color 0.2s; opacity: 0; transform: translateY(10px); animation: fadeIn 0.3s ease-out forwards; }
+    .smgt-qr-log-item:hover { background-color: #f8fafc; }
+    .smgt-qr-log-item.visible { opacity: 1; transform: translateY(0); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .log-item-icon-wrapper { margin-right: 1rem; padding: 0.625rem; border-radius: 9999px; align-self: flex-start; display: flex; align-items:center; justify-content:center; width:40px; height:40px;}
+    .bg-blue-100 { background-color: #dbeafe; } .text-blue-600 { color: #2563eb; }
+    .bg-purple-100 { background-color: #ede9fe; } .text-purple-600 { color: #7c3aed; }
+    .truncate{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .smgt-qr-status-alert{ border-left-width:4px; padding:1rem; border-radius:0.375rem; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+    .flex {display:flex;} .items-start {align-items:flex-start;} .w-6 {width:1.5rem;} .h-6 {height:1.5rem;} .mr-3 {margin-right:0.75rem;} .flex-shrink-0 {flex-shrink:0;} .mt-0-5 {margin-top:0.125rem;} .font-bold {font-weight:700;}
+    .bg-green-100{background-color:#dcfce7} .border-green-400{border-color:#4ade80} .text-green-800{color:#166534} .text-green-500{color:#22c55e}
+    .bg-red-100{background-color:#fee2e2} .border-red-400{border-color:#f87171} .text-red-800{color:#991b1b} .text-red-500{color:#ef4444}
+    .bg-orange-100 {background-color: #ffedd5;} .text-orange-800 {color: #9a3412;}
+    .w-5{width:1.25rem;} .h-5{height:1.25rem;} .mr-2{margin-right:0.5rem;}
+    .animate-spin{-webkit-animation:spin 1s linear infinite;animation:spin 1s linear infinite}@-webkit-keyframes spin{to{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}@keyframes spin{to{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}
+    .font-semibold{font-weight:600;} .text-lg{font-size:1.125rem;} .mt-3{margin-top:0.75rem;} .h-20{height:5rem;} .mt-4{margin-top:1rem;} .w-full{width:100%;}
+    .min-w-0{min-width:0;} .flex-1{flex:1 1 0%;} .gap-2{gap:0.5rem;} .text-sm{font-size:0.875rem;} .text-slate-500{color:#64748b;}
+    .text-xs{font-size:0.75rem;} .mt-1{margin-top:0.25rem;} .text-slate-800{color:#1e293b;}
+    .ml-4{margin-left:1rem;} .gap-3{gap:0.75rem;} .text-red-600{color:#dc2626;}
+    .px-2-5{padding-left:0.625rem; padding-right:0.625rem;} .py-0-5{padding-top:0.125rem; padding-bottom:0.125rem;} .rounded-full{border-radius:9999px;} .font-medium{font-weight:500;}
+    #wpbody-content .button-primary { background: var(--smgt-brand-primary); border-color: var(--smgt-brand-primary); }
+    #wpbody-content .button-primary:hover, #wpbody-content .button-primary:focus { background: #392f6b; border-color: #392f6b; }
+    </style>
+    <?php
+}
+
+function smgt_qr_js_escape($str) {
+    return str_replace(["\n", "\r", "'"], ["\\n", "\\r", "\\'"], $str);
+}
+
+function smgt_qr_icon_pm_shri_logo($class = '') {
+    $svg = '<svg class="'.esc_attr($class).'" viewBox="0 0 350 50" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="flameGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#FF9933;stop-opacity:1" />
+          <stop offset="50%" style="stop-color:#FF5733;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#C70039;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <path d="M25 45 C 25 45, 35 30, 45 20 C 55 10, 30 0, 25 0 C 20 0, -5 10, 5 20 C 15 30, 25 45, 25 45 Z M25 40 C 25 40, 30 30, 35 25 C 40 20, 30 10, 25 10 C 20 10, 10 20, 15 25 C 20 30, 25 40, 25 40 Z" fill="url(#flameGradient)" transform="translate(0, 2.5)" />
+      <text x="60" y="22" font-family="\'Segoe UI\', sans-serif" font-size="16" font-weight="600" fill="#4a5568">PM SHRI PRATHMIK</text>
+      <text x="60" y="42" font-family="\'Segoe UI\', sans-serif" font-size="16" font-weight="600" fill="#4a5568">VIDHYAMANDIR PONSRI</text>
+    </svg>';
+    return $svg;
+}
+
+function smgt_qr_icon_student($class = '') {
+    return '<svg xmlns="http://www.w3.org/2000/svg" class="'.esc_attr($class).'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5v2a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5z"></path><path d="M19 14v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5"></path><path d="M16 14a4 4 0 1 1-8 0"></path></svg>';
+}
+
+function smgt_qr_icon_teacher($class = '') {
+    return '<svg xmlns="http://www.w3.org/2000/svg" class="'.esc_attr($class).'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M20 19v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1"></path><path d="M12 12v3m0 3v-3m-4-3h8"></path></svg>';
+}
+
+function smgt_qr_icon_check_circle($class = '') {
+    return '<svg xmlns="http://www.w3.org/2000/svg" class="'.esc_attr($class).'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+}
+
+function smgt_qr_icon_error_circle($class = '') {
+    return '<svg xmlns="http://www.w3.org/2000/svg" class="'.esc_attr($class).'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+}
+
+function smgt_qr_icon_sync($status = 'syncing') {
+    switch ($status) {
+        case 'syncing':
+            return '<svg class="animate-spin h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><title>Syncing</title><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+        case 'synced':
+            return '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor"><title>Synced</title><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>';
+        case 'error':
+             return '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><title>Error</title><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>';
+        default:
+            return '';
+    }
+}
+?>
