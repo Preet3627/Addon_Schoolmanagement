@@ -83,7 +83,7 @@ const AttendanceLog: React.FC<AttendanceLogProps> = ({ records }) => {
               {records.map((record) => (
                 <li key={record.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors duration-150">
                   <div className="flex items-center flex-1 min-w-0">
-                    <span className={`mr-4 p-2 rounded-full self-start ${record.mode === AttendanceMode.Student ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
+                    <span className={`mr-4 p-2 rounded-full self-start ${record.mode === AttendanceMode.Student ? 'bg-blue-100 text-blue-700' : 'bg-teal-100 text-teal-700'}`}>
                       {record.mode === AttendanceMode.Student ? <StudentIcon className="w-5 h-5" /> : <TeacherIcon className="w-5 h-5" />}
                     </span>
                     <div className="flex-1 min-w-0">

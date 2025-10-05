@@ -6,7 +6,7 @@ import { StudentIcon, TeacherIcon, CheckCircleIcon } from './components/icons';
 
 declare global {
   interface Window {
-    qrAttendanceData: {
+    smgtQrAttendanceData: {
       apiUrl: string;
       nonce: string;
       is_admin?: boolean;
@@ -16,7 +16,7 @@ declare global {
 
 // Default to is_admin: true so the live demo on the static index.html page works.
 // In WordPress, the plugin will correctly set this to true or false based on the user's role.
-const { apiUrl, nonce, is_admin } = window.qrAttendanceData || { apiUrl: '', nonce: '', is_admin: true };
+const { apiUrl, nonce, is_admin } = window.smgtQrAttendanceData || { apiUrl: '', nonce: '', is_admin: true };
 
 const App: React.FC = () => {
   // For admins, the mode can be toggled. For non-admins (teachers), it's always Student.
@@ -33,10 +33,8 @@ const App: React.FC = () => {
     const now = new Date();
     const tempId = `${decodedText}-${now.toISOString()}`;
     
-    // If user is not an admin, force the mode to Student regardless of QR data.
     let attendanceMode = is_admin ? mode : AttendanceMode.Student;
     
-    // For admins, allow the QR code to override the selected mode if specified
     if (is_admin) {
         try {
             const qrData = JSON.parse(decodedText);
@@ -47,7 +45,6 @@ const App: React.FC = () => {
             // Not JSON, use the mode selected in the UI
         }
     }
-
 
     const newRecord: AttendanceRecord = {
       id: tempId,
@@ -116,8 +113,8 @@ const App: React.FC = () => {
     return (
       <button
         onClick={() => setMode(targetMode)}
-        style={isActive ? { backgroundColor: '#46489A' } : {}}
-        className={`flex-1 px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+        style={isActive ? { backgroundColor: '#3c8dbc' } : {}}
+        className={`flex-1 px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
           isActive
             ? 'text-white shadow-md'
             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -150,7 +147,7 @@ const App: React.FC = () => {
                 ) : (
                   // Teacher (Non-Admin) View: Lock to Student scanning only
                   <div className="w-full max-w-xs mb-6 text-center">
-                    <div className="p-3 bg-indigo-50 text-indigo-800 rounded-xl">
+                    <div className="p-3 bg-blue-50 text-blue-800 rounded-xl">
                       <h2 className="font-semibold flex items-center justify-center text-base">
                         <StudentIcon className="w-5 h-5 mr-2" />
                         Scanning Student Attendance
@@ -164,7 +161,7 @@ const App: React.FC = () => {
                    <QRScanner onScanSuccess={handleScanSuccess} onScanError={handleScanError} />
                    {isSyncing && (
                      <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center text-gray-800 z-10 rounded-xl">
-                        <svg className="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>

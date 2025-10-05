@@ -5,7 +5,7 @@ export const PmShriLogo: React.FC<{ className?: string }> = ({ className }) => (
       <style>
         {`.pm-text { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 32px; letter-spacing: -1px; }`}
       </style>
-      <text x="0" y="30" className="pm-text" fill="#46489A">PM</text>
+      <text x="0" y="30" className="pm-text" fill="#3c8dbc">PM</text>
       <text x="52" y="30" className="pm-text" fill="#FF9933">SHRI</text>
     </svg>
   );
