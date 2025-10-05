@@ -96,7 +96,7 @@
             </div>
             <h3 class="font-bold text-lg mb-2 text-gray-900">1. Print ID Cards</h3>
             <p class="text-gray-600 text-sm max-w-xs mx-auto">
-              Go to **Student &rarr; Bulk Print ID Cards**, select a class, and generate printable ID cards for all students in one go.
+              Go to **School Management &rarr; Bulk Print ID Cards**, select a class, and generate printable ID cards for all students in one go.
             </p>
           </div>
           <!-- Step 2: Scan -->
@@ -108,7 +108,7 @@
             </div>
             <h3 class="font-bold text-lg mb-2 text-gray-900">2. Scan Attendance</h3>
             <p class="text-gray-600 text-sm max-w-xs mx-auto">
-              Navigate to the **Attendance &rarr; Scan Attendance** menu in WordPress to launch the scanner on any device with a camera.
+              Navigate to the **School Management &rarr; Scan Attendance** menu in WordPress to launch the scanner on any device with a camera.
             </p>
           </div>
           <!-- Step 3: Sync -->
@@ -171,7 +171,7 @@
 /**
  * Plugin Name:       School Management System - QR Attendance
  * Description:       A seamless QR code attendance solution for PM SHRI Schools, fully integrated with the School Management System plugin by Mojoomla.
- * Version:           2.0.0
+ * Version:           2.0.1
  * Author:            AI Assistant
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -224,8 +224,9 @@ function smgt_qr_attendance_load_features() {
 }
 
 function smgt_qr_add_admin_menu_pages() {
-    add_submenu_page( 'smgt_attendence', 'Scan Attendance', 'Scan Attendance', 'manage_options', 'smgt-scan-attendance', 'smgt_qr_scanner_page_render' );
-    add_submenu_page( 'smgt_student', 'Bulk Print ID Cards', 'Bulk Print ID Cards', 'manage_options', 'smgt-bulk-print-ids', 'smgt_qr_bulk_print_page_render' );
+    // Corrected: Use the main parent slug 'smgt_school' for both pages.
+    add_submenu_page( 'smgt_school', 'Scan Attendance', 'Scan Attendance', 'manage_options', 'smgt-scan-attendance', 'smgt_qr_scanner_page_render' );
+    add_submenu_page( 'smgt_school', 'Bulk Print ID Cards', 'Bulk Print ID Cards', 'manage_options', 'smgt-bulk-print-ids', 'smgt_qr_bulk_print_page_render' );
 }
 
 function smgt_qr_scanner_page_render() {
@@ -234,15 +235,19 @@ function smgt_qr_scanner_page_render() {
 
 function smgt_qr_enqueue_scanner_scripts( $hook ) {
     $current_screen = get_current_screen();
-    if ( 'attendance_page_smgt-scan-attendance' !== $current_screen->id ) return;
+    // The hook for submenu pages is `toplevel_page_` followed by the page slug.
+    if ( 'school-management_page_smgt-scan-attendance' !== $current_screen->id && 'school-management_page_smgt-bulk-print-ids' !== $current_screen->id ) return;
     
-    $script_url = 'https://aistudio.google.com/app/index.js';
-    wp_enqueue_script( 'smgt-qr-attendance-app', $script_url, ['wp-element'], '2.0.0', true );
-    wp_localize_script( 'smgt-qr-attendance-app', 'smgtQrAttendanceData', [
-        'apiUrl'   => rest_url( 'smgt-qr-attendance/v1/log' ),
-        'nonce'    => wp_create_nonce( 'wp_rest' ),
-        'is_admin' => current_user_can( 'manage_options' ),
-    ]);
+    // Check if we are on the scanner page to enqueue scripts
+    if ( 'school-management_page_smgt-scan-attendance' === $current_screen->id ) {
+        $script_url = 'https://aistudio.google.com/app/index.js';
+        wp_enqueue_script( 'smgt-qr-attendance-app', $script_url, ['wp-element'], '2.0.1', true );
+        wp_localize_script( 'smgt-qr-attendance-app', 'smgtQrAttendanceData', [
+            'apiUrl'   => rest_url( 'smgt-qr-attendance/v1/log' ),
+            'nonce'    => wp_create_nonce( 'wp_rest' ),
+            'is_admin' => current_user_can( 'manage_options' ),
+        ]);
+    }
 }
 
 function smgt_qr_register_rest_api() {
@@ -358,7 +363,9 @@ function smgt_qr_render_single_id_card( $user ) {
     $dob = get_user_meta( $user_id, 'smgt_bdate', true ) ?: 'N/A';
     $mobile = get_user_meta( $user_id, 'mobile', true ) ?: 'N/A';
     $photo_url = get_user_meta( $user_id, 'smgt_user_avatar', true );
-    if ( empty($photo_url) ) $photo_url = get_avatar_url( $user_id, ['size' => 150] );
+    if ( empty($photo_url) ) {
+        $photo_url = get_avatar_url( $user_id, ['size' => 150] );
+    }
     ?&gt;
     &lt;div class="smgt-id-card"&gt;
         &lt;div class="id-card-header"&gt;
@@ -474,7 +481,7 @@ function smgt_qr_id_card_styles() {
               <div class="step-card">
                 <div class="step-number">6</div>
                 <h3 class="font-bold text-lg mb-2 text-gray-900">All Set!</h3>
-                <p class="text-gray-600 text-sm">You can now bulk print cards from <strong>Student &rarr; Bulk Print ID Cards</strong> and scan from <strong>Attendance &rarr; Scan Attendance</strong>.</p>
+                <p class="text-gray-600 text-sm">You can now find the new pages inside the main <strong>School Management</strong> menu.</p>
               </div>
             </div>
         </div>
